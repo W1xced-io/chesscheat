@@ -6,9 +6,7 @@
 <br>
 
 
-[![Preview](preview.png)](preview.mp4)
-
-[Watch preview video](preview.mp4)
+![Preview](preview.gif)
 
 
 <h1>Usage</h1>
