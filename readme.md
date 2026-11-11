@@ -9,16 +9,16 @@
 ![Preview](preview.png)
 
 
-<h1>How to install (Firefox):</h1>
-1. Open Firefox and go to <code>about:debugging#/runtime/this-firefox</code>.
-2. Click <b>Load Temporary Add-on...</b>
-3. Select <code>manifest.json</code> from this folder.
-
 <h1>Usage</h1>
 - A minimal draggable GUI appears on chess.com pages.
 - Click <b>Start</b> to run analysis, <b>Stop</b> to stop.
 - Press <b>G</b> to toggle GUI and hints/highlights on/off (visual only, like unhook). Press <b>G</b> again to show them. While typing in inputs, <b>G</b> won't toggle.
 - Drag the panel by its header. Adjust depth in the GUI.
+
+<h1>How to install (Firefox):</h1>
+1. Open Firefox and go to <code>about:debugging#/runtime/this-firefox</code>.
+2. Click <b>Load Temporary Add-on...</b>
+3. Select <code>manifest.json</code> from this folder.
 
 <h1>How to install (Chrome):</h1>
 Open <code>chrome://extensions</code>, enable Developer mode, click <b>Load unpacked</b>, and select this folder.
