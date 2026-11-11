@@ -6,6 +6,9 @@
 <br>
 
 
+![Preview](preview.gif)
+
+
 <h1>Usage</h1>
 - A minimal draggable GUI appears on chess.com pages.
 - Click <b>Start</b> to run analysis, <b>Stop</b> to stop.
