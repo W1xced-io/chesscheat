@@ -5,7 +5,10 @@
   let globalDepth = 8;
   let engine = null;
   let pollId = null;
+  let observer = null;
+  let debounceId = null;
   let lastFen = "";
+  let searchFen = "";
   let lastBestMove = "";
   let hintsEnabled = true;
   let running = false;
@@ -24,7 +27,7 @@
         let piece = null;
         if (pieceEl) {
           for (const item of pieceEl.classList.values()) {
-            if (item.length === 2) piece = item;
+            if (/^[wb][pnbrqk]$/i.test(item)) { piece = item.toLowerCase(); break; }
           }
         }
         if (!piece) {
@@ -78,6 +81,7 @@
 
   function requestBestMove(fen) {
     if (!engine) return;
+    searchFen = fen;
     engine.postMessage("stop");
     engine.postMessage(`position fen ${fen}`);
     engine.postMessage(`go movetime 150 depth ${globalDepth}`);
@@ -87,12 +91,30 @@
     running = false;
     if (pollId) clearInterval(pollId);
     pollId = null;
+    if (observer) {
+      try { observer.disconnect(); } catch (e) {}
+    }
+    observer = null;
+    if (debounceId) clearTimeout(debounceId);
+    debounceId = null;
     if (engine) {
       try { engine.terminate(); } catch (e) {}
     }
     engine = null;
     lastFen = "";
+    searchFen = "";
     setStatus("stopped");
+  }
+
+  function checkPosition() {
+    const b = getBoard();
+    if (!b || !running) return;
+    const p = b.classList.contains("flipped") ? "b" : "w";
+    const fen = `${getFenString()} ${p}`;
+    if (fen !== lastFen) {
+      lastFen = fen;
+      requestBestMove(fen);
+    }
   }
 
   function start() {
@@ -103,8 +125,7 @@
     }
     if (running) return;
     running = true;
-    const player = board.classList.contains("flipped") ? "b" : "w";
-    lastFen = `${getFenString()} ${player}`;
+    lastFen = `${getFenString()} ${board.classList.contains("flipped") ? "b" : "w"}`;
     try {
       engine = new Worker("/bundles/app/js/vendor/jschessengine/stockfish.asm.1abfa10c.js");
     } catch (e) {
@@ -115,24 +136,24 @@
     engine.onmessage = (event) => {
       const data = String(event.data || "");
       if (data.startsWith("bestmove")) {
+        if (lastFen !== searchFen) return;
         const bestMove = data.split(" ")[1] || "";
+        if (!bestMove || bestMove === "(none)" || bestMove === "0000") return;
         lastBestMove = bestMove;
-        setStatus(bestMove ? `best: ${bestMove}` : "...");
+        setStatus(`best: ${bestMove}`);
         renderHighlights(bestMove);
       }
     };
     setStatus("running");
     requestBestMove(lastFen);
-    pollId = setInterval(() => {
-      const b = getBoard();
-      if (!b) return;
-      const p = b.classList.contains("flipped") ? "b" : "w";
-      const fen = `${getFenString()} ${p}`;
-      if (fen !== lastFen) {
-        lastFen = fen;
-        requestBestMove(fen);
-      }
-    }, 100);
+    pollId = setInterval(checkPosition, 1000);
+    try {
+      observer = new MutationObserver(() => {
+        clearTimeout(debounceId);
+        debounceId = setTimeout(checkPosition, 50);
+      });
+      observer.observe(board, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+    } catch (e) {}
   }
 
   function toggleHints() {
