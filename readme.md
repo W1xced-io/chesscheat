@@ -6,7 +6,7 @@
 <br>
 
 
-https://github.com/W1xced-io/chesscheat/raw/master/preview.mp4
+![Preview](preview.gif?v=7)
 
 
 <h1>Usage</h1>
