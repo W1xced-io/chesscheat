@@ -6,7 +6,9 @@
 <br>
 
 
-<video src="preview.mp4" controls muted playsinline width="100%"></video>
+[![Preview](preview.png)](preview.mp4)
+
+[Watch preview video](preview.mp4)
 
 
 <h1>Usage</h1>
