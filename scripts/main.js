@@ -1,150 +1,252 @@
-//this is quite possibly the most disgusting piece of code i've ever written.
-var hackRunning = false;
-var globalDepth = 15;
-function main() {
-  const chessboard = document.querySelector("wc-chess-board");
-  var player_colour = chessboard.classList.contains("flipped") ? "b" : "w";
-  //generate FEN string from board,
-  function getFenString() {
-    let fen_string = ""
-    for (var i = 8; i >= 1; i--) {
-      for (var j = 1; j <= 8; j++) {
-        let position = `${j}${i}`
-        //for every new row on the chessboard
-        if (j == 1 && i != 8) {
-          fen_string += "/"
-        }
-        let piece_in_position = document.querySelectorAll(`.piece.square-${position}`)[0]?.classList ?? null
-        //get piece name by shortest class
-        if (piece_in_position != null) {
-          for (var item of piece_in_position.values()) {
-            if (item.length == 2) {
-              piece_in_position = item
-            }
-          }
-        }
-        //if position is empty
-        if (piece_in_position == null) {
-          //if previous position is empty, sum up numbers
-          let previous_char = fen_string.split("").pop()
-          if (!isNaN(Number(previous_char))) {
-            fen_string = fen_string.substring(0, fen_string.length - 1)
-            fen_string += Number(previous_char) + 1
-          }
-          else {
-            fen_string += "1"
-          }
-        }
-        else if (piece_in_position?.split("")[0] == "b") {
-          fen_string += piece_in_position.split("")[1]
-        }
-        else if (piece_in_position?.split("")[0] == "w") {
-          fen_string += piece_in_position.split("")[1].toUpperCase()
-        }
+(function () {
+  if (window.__chesscheatLoaded) return;
+  window.__chesscheatLoaded = true;
 
+  let globalDepth = 15;
+  let engine = null;
+  let pollId = null;
+  let lastFen = "";
+  let lastBestMove = "";
+  let hintsEnabled = true;
+  let running = false;
+
+  function getBoard() {
+    return document.querySelector("wc-chess-board");
+  }
+
+  function getFenString() {
+    let fen = "";
+    for (let i = 8; i >= 1; i--) {
+      for (let j = 1; j <= 8; j++) {
+        const position = `${j}${i}`;
+        if (j === 1 && i !== 8) fen += "/";
+        const pieceEl = document.querySelector(`.piece.square-${position}`);
+        let piece = null;
+        if (pieceEl) {
+          for (const item of pieceEl.classList.values()) {
+            if (item.length === 2) piece = item;
+          }
+        }
+        if (!piece) {
+          const prev = fen.slice(-1);
+          if (prev && !isNaN(Number(prev))) {
+            fen = fen.slice(0, -1) + String(Number(prev) + 1);
+          } else {
+            fen += "1";
+          }
+        } else if (piece[0] === "b") {
+          fen += piece[1];
+        } else if (piece[0] === "w") {
+          fen += piece[1].toUpperCase();
+        }
       }
     }
-    return fen_string
+    return fen;
   }
-  let fen_string = getFenString()
-  fen_string += ` ${player_colour}`
-  console.log(fen_string)
-  const engine = new Worker("/bundles/app/js/vendor/jschessengine/stockfish.asm.1abfa10c.js")
-  engine.postMessage(`position fen ${fen_string}`)
-  engine.postMessage('go wtime 300000 btime 300000 winc 2000 binc 2000');
-  engine.postMessage("go depth ${globalDepth}")
-  //listen for when moves are made 
-  var getPlays = setInterval(() => {
-    let new_fen_string = getFenString()
-    new_fen_string += ` ${player_colour}`
-    if (new_fen_string != fen_string) {
-      fen_string = new_fen_string
-      engine.postMessage(`position fen ${fen_string}`)
-      engine.postMessage('go wtime 300000 btime 300000 winc 2000 binc 2000');
-      console.log(globalDepth);
-      engine.postMessage("go depth ${globalDepth}")
-    }
-  })
-  engine.onmessage = function(event) {
-    if (event.data.startsWith('bestmove')) {
-      const bestMove = event.data.split(' ')[1];
-      // Use the best move in your application
-      char_map = { "a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6, "g": 7, "h": 8 }
-      console.log('Best move:', bestMove);
-      document.getElementById("best-move").innerHTML = ` Bestmove is ${bestMove} at depth ${globalDepth}. Tap to stop`
-      //create cheat squares on the board
-      previous_cheat_squares = document.querySelectorAll(".cheat-highlight").forEach((element) => {
-        //remove all previous cheat squares
-        element.remove()
-      })
-      bestMove_array = bestMove.split("")
-      initial_position = `${char_map[bestMove_array[0]]}${bestMove_array[1]}`
-      final_position = `${char_map[bestMove_array[2]]}${bestMove_array[3]}`
 
-      initial_highlight = document.createElement("div");
-      initial_highlight.className = `highlight cheat-highlight square-${initial_position}`
-      initial_highlight.style = "background:red;opacity:0.5"
-
-      final_highlight = document.createElement("div");
-      final_highlight.className = `highlight cheat-highlight square-${final_position}`
-      final_highlight.style = "background:red;opacity:0.5"
-      chessboard.appendChild(initial_highlight)
-      chessboard.appendChild(final_highlight)
-    }
+  function clearHighlights() {
+    document.querySelectorAll(".cheat-highlight").forEach((el) => el.remove());
   }
-  //try to stop hack
-  document.getElementById("hack_button").onclick = () => {
-    if (hackRunning == false) {
-      startHack(document.getElementById("hack_button"));
+
+  function renderHighlights(bestMove) {
+    clearHighlights();
+    if (!hintsEnabled || !bestMove || bestMove.length < 4) return;
+    const board = getBoard();
+    if (!board) return;
+    const map = { a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8 };
+    const from = `${map[bestMove[0]]}${bestMove[1]}`;
+    const to = `${map[bestMove[2]]}${bestMove[3]}`;
+    [from, to].forEach((sq) => {
+      const h = document.createElement("div");
+      h.className = `highlight cheat-highlight square-${sq}`;
+      h.style.background = "rgba(235, 87, 87, 0.55)";
+      h.style.pointerEvents = "none";
+      board.appendChild(h);
+    });
+  }
+
+  function setStatus(text) {
+    const el = document.getElementById("cc-status");
+    if (el) el.textContent = text;
+  }
+
+  function setToggleLabel() {
+    const el = document.getElementById("cc-toggle");
+    if (el) el.textContent = hintsEnabled ? "ON" : "OFF";
+    if (el) el.style.opacity = hintsEnabled ? "1" : "0.5";
+  }
+
+  function requestBestMove(fen) {
+    if (!engine) return;
+    engine.postMessage(`position fen ${fen}`);
+    engine.postMessage("go wtime 300000 btime 300000 winc 2000 binc 2000");
+    engine.postMessage(`go depth ${globalDepth}`);
+  }
+
+  function stop() {
+    running = false;
+    if (pollId) clearInterval(pollId);
+    pollId = null;
+    if (engine) {
+      try { engine.terminate(); } catch (e) {}
+    }
+    engine = null;
+    lastFen = "";
+    setStatus("stopped");
+  }
+
+  function start() {
+    const board = getBoard();
+    if (!board) {
+      setStatus("no board");
       return;
     }
-    //stop listening for moves effectively stoping stockfish
-    clearInterval(getPlays);
-    //delete all cheat squares
-    document.querySelectorAll(".cheat-highlight").forEach((element) => {
-      element.remove();
+    if (running) return;
+    running = true;
+    const player = board.classList.contains("flipped") ? "b" : "w";
+    lastFen = `${getFenString()} ${player}`;
+    try {
+      engine = new Worker("/bundles/app/js/vendor/jschessengine/stockfish.asm.1abfa10c.js");
+    } catch (e) {
+      setStatus("engine err");
+      running = false;
+      return;
+    }
+    engine.onmessage = (event) => {
+      const data = String(event.data || "");
+      if (data.startsWith("bestmove")) {
+        const bestMove = data.split(" ")[1] || "";
+        lastBestMove = bestMove;
+        setStatus(bestMove ? `best: ${bestMove}` : "...");
+        renderHighlights(bestMove);
+      }
+    };
+    setStatus("running");
+    requestBestMove(lastFen);
+    pollId = setInterval(() => {
+      const b = getBoard();
+      if (!b) return;
+      const p = b.classList.contains("flipped") ? "b" : "w";
+      const fen = `${getFenString()} ${p}`;
+      if (fen !== lastFen) {
+        lastFen = fen;
+        requestBestMove(fen);
+      }
+    }, 300);
+  }
+
+  function toggleHints() {
+    hintsEnabled = !hintsEnabled;
+    setToggleLabel();
+    const gui = document.getElementById("cc-mini-gui");
+    if (gui) gui.style.display = hintsEnabled ? "block" : "none";
+    if (!hintsEnabled) {
+      clearHighlights();
+    } else {
+      renderHighlights(lastBestMove);
+    }
+  }
+
+  function createGui() {
+    if (document.getElementById("cc-mini-gui")) return;
+    const root = document.createElement("div");
+    root.id = "cc-mini-gui";
+    root.style.cssText = [
+      "position:fixed",
+      "top:16px",
+      "right:16px",
+      "z-index:2147483647",
+      "background:rgba(20,20,20,.85)",
+      "color:#fff",
+      "font:12px/1.2 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif",
+      "border:1px solid rgba(255,255,255,.12)",
+      "border-radius:8px",
+      "padding:8px",
+      "min-width:150px",
+      "backdrop-filter:blur(6px)",
+      "user-select:none"
+    ].join(";");
+
+    root.innerHTML = `
+      <div id="cc-drag" style="cursor:move;font-weight:600;font-size:11px;opacity:.8;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+        <span>Chesscheat</span><span style="font-weight:500">G: <span id="cc-toggle">ON</span></span>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+        <button id="cc-start" style="all:unset;cursor:pointer;background:#2f6fed;padding:4px 8px;border-radius:6px;font-size:11px">Start</button>
+        <label style="font-size:11px;opacity:.85;display:flex;gap:4px;align-items:center">d<input id="cc-depth" type="number" min="1" max="30" value="${globalDepth}" style="width:40px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:2px 4px;font-size:11px"></label>
+      </div>
+      <div id="cc-status" style="font-size:11px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">idle (G toggle)</div>
+    `;
+
+    document.documentElement.appendChild(root);
+
+    const startBtn = root.querySelector("#cc-start");
+    const depthInput = root.querySelector("#cc-depth");
+    const drag = root.querySelector("#cc-drag");
+
+    startBtn.addEventListener("click", () => {
+      if (!running) {
+        start();
+        startBtn.textContent = "Stop";
+        startBtn.style.background = "#444";
+      } else {
+        stop();
+        clearHighlights();
+        lastBestMove = "";
+        startBtn.textContent = "Start";
+        startBtn.style.background = "#2f6fed";
+      }
     });
-    //set hackRunning to false;
-    hackRunning = false;
-    document.getElementById("hack_button").innerHTML = "Start Hack Again";
-    return { status: "false" }
 
-  }
-  return { status: true }
+    depthInput.addEventListener("change", () => {
+      const v = parseInt(depthInput.value, 10);
+      if (!isNaN(v)) globalDepth = Math.min(30, Math.max(1, v));
+      depthInput.value = String(globalDepth);
+    });
 
-}
-function startHack(element) {
-  console.log(hackRunning);
-  if (hackRunning == true) {
-    return;
+    let dragging = false;
+    let offX = 0;
+    let offY = 0;
+    drag.addEventListener("mousedown", (e) => {
+      dragging = true;
+      const rect = root.getBoundingClientRect();
+      offX = e.clientX - rect.left;
+      offY = e.clientY - rect.top;
+      root.style.right = "auto";
+      e.preventDefault();
+    });
+    window.addEventListener("mousemove", (e) => {
+      if (!dragging) return;
+      root.style.left = `${Math.max(0, e.clientX - offX)}px`;
+      root.style.top = `${Math.max(0, e.clientY - offY)}px`;
+    });
+    window.addEventListener("mouseup", () => {
+      dragging = false;
+    });
+
+    setToggleLabel();
   }
-  hackRunning = true;
-  element.innerHTML = "Please Wait.."
-  element.disabled = true
-  //wait until chessboard content is probably loaded
-  let hack = main()
-  if (hack.status == true) {
-    element.disabled = false;
-    element.innerHTML = `Hack running. <span id = 'best-move'>Calculating Best move. Tap to stop</span>`
+
+  function isTypingTarget(el) {
+    if (!el) return false;
+    const tag = el.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
   }
-  else {
-    element.innerHTML = "Start Hack"
-    element.disabled = false
-    alert(hack.error)
+
+  window.addEventListener("keydown", (e) => {
+    if (isTypingTarget(e.target)) return;
+    if (e.key === "g" || e.key === "G") {
+      toggleHints();
+    }
+  }, true);
+
+  function init() {
+    createGui();
   }
-}
-var button = document.createElement("button");
-var input = document.createElement("input");
-input.value = globalDepth;
-input.placeholder = "Depth, choose anywhere under 40. Very high values can cause your browser to leak and freeze."
-button.className = "ui_v5-button-component ui_v5-button-primary ui_v5-button-large ui_v5-button-full"
-button.innerHTML = "Start Hack"
-input.addEventListener("input", function() {
-  globalDepth = this.value; //i dont care
-})
-//start hack when button is clicked
-button.id = "hack_button";
-button.onclick = () => { startHack(button) }
-let main_body = document.querySelector(".board-layout-main")
-main_body.prepend(input);
-main_body.prepend(button)
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();

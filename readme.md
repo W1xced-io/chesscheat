@@ -8,15 +8,16 @@
 https://user-images.githubusercontent.com/71329328/221189107-244544b0-8070-4ee3-973f-c4c9bfa15067.mp4
 
 
-<h1>How to install:</h1>
-First clone this repo if you have git installed on your machine:
-<code>
-git clone https://github.com/Eugenenoble2005/chesscheat.git
-</code>
+<h1>How to install (Firefox):</h1>
+1. Open Firefox and go to <code>about:debugging#/runtime/this-firefox</code>.
+2. Click <b>Load Temporary Add-on...</b>
+3. Select <code>manifest.json</code> from this folder.
 
-If you do not have git installed, you may download this repo as a zip by following this link:
-<a href = "https://github.com/Eugenenoble2005/chesscheat/archive/refs/heads/master.zip">Zip Download</a>
+<h1>Usage</h1>
+- A minimal draggable GUI appears on chess.com pages.
+- Click <b>Start</b> to run analysis, <b>Stop</b> to stop.
+- Press <b>G</b> to toggle GUI and hints/highlights on/off (visual only, like unhook). Press <b>G</b> again to show them. While typing in inputs, <b>G</b> won't toggle.
+- Drag the panel by its header. Adjust depth in the GUI.
 
-
-Open google chrome and visit 'chrome://extensions'.
-Enable developer mode by clicking the toggle at the top right. Click 'Load Unpacked' and finally select the folder where you have cloned or extracted the repo. Activate the extension and done.
+<h1>How to install (Chrome):</h1>
+Open <code>chrome://extensions</code>, enable Developer mode, click <b>Load unpacked</b>, and select this folder.
