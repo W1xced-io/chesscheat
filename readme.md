@@ -23,6 +23,9 @@
 <h1>How to install (Chrome):</h1>
 Open <code>chrome://extensions</code>, enable Developer mode, click <b>Load unpacked</b>, and select this folder.
 
+<h1>How to install (Microsoft Edge):</h1>
+Open <code>edge://extensions</code>, enable Developer mode, click <b>Load unpacked</b>, and select this folder.
+
 <h1>How to install (Safari, macOS):</h1>
 1. Requires macOS with Safari 15.4+ and Xcode Command Line Tools.
 2. Convert the extension: <code>xcrun safari-web-extension-converter /path/to/this/folder</code>
