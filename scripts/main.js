@@ -2,7 +2,7 @@
   if (window.__chesscheatLoaded) return;
   window.__chesscheatLoaded = true;
 
-  let globalDepth = 15;
+  let globalDepth = 8;
   let engine = null;
   let pollId = null;
   let lastFen = "";
@@ -78,9 +78,9 @@
 
   function requestBestMove(fen) {
     if (!engine) return;
+    engine.postMessage("stop");
     engine.postMessage(`position fen ${fen}`);
-    engine.postMessage("go wtime 300000 btime 300000 winc 2000 binc 2000");
-    engine.postMessage(`go depth ${globalDepth}`);
+    engine.postMessage(`go movetime 150 depth ${globalDepth}`);
   }
 
   function stop() {
@@ -132,7 +132,7 @@
         lastFen = fen;
         requestBestMove(fen);
       }
-    }, 300);
+    }, 100);
   }
 
   function toggleHints() {
