@@ -6,7 +6,7 @@
 <br>
 
 
-![Preview](preview.gif?v=5)
+![Preview](preview.gif?v=6)
 
 
 <h1>Usage</h1>
