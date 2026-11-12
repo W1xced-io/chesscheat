@@ -33,6 +33,7 @@
 const FILES='abcdefgh';
 const squareCode=(sq)=>`${FILES.indexOf(sq[0])+1}${sq[1]}`;
 const pieceChar=(p)=>({K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'}[p]||'');
+const pieceImg = (p) => `https://www.chess.com/bundles/web/images/pieces/neo/${p}.png`;
 const pieceFont = '"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","DejaVu Sans",sans-serif';
 let flipped=false, state={fen:'',grid:{},best:'',score:null,depth:0,status:'idle'};
 function gridFromFen(fen){
@@ -64,7 +65,7 @@ function render(){
       if(sq===from) bg='rgba(235,87,87,.6)';
       if(sq===to) bg='rgba(72,193,249,.55)';
     }
-    html+=`<div style="display:flex;align-items:center;justify-content:center;background:${bg};color:${p?(p===p.toUpperCase()?'#fff':'#111'):'transparent'};text-shadow:${p?(p===p.toUpperCase()?'0 1px 2px rgba(0,0,0,.6)':'0 1px 1px rgba(255,255,255,.25)'):'none'};font-family:${pieceFont};font-size:clamp(14px,4.6vmin,40px);line-height:1">${pieceChar(p)}</div>`;
+    html+=`<div style="display:flex;align-items:center;justify-content:center;background:${bg};font-size:clamp(14px,4.6vmin,40px);line-height:1">${p?`<img src="${pieceImg(p)}" alt="${p}" style="width:82%;height:82%;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none">`:''}</div>`;
   }
   el.innerHTML=html;
   document.getElementById('best').textContent=state.best||'--';

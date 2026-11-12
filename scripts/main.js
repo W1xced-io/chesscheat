@@ -571,6 +571,8 @@
     return map[p] || '';
   }
 
+  const pieceImg = (p) => `https://www.chess.com/bundles/web/images/pieces/neo/${p}.png`;
+
   const PIECE_FONT = '"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","DejaVu Sans",sans-serif';
 
   function renderOverlayBoard() {
@@ -595,7 +597,7 @@
           if (sq === from) { bg = 'rgba(235,87,87,.6)'; }
           if (sq === to) { bg = 'rgba(72,193,249,.55)'; }
         }
-        html += `<div style="display:flex;align-items:center;justify-content:center;background:${bg};color:${p ? (p === p.toUpperCase() ? '#fff' : '#111') : 'transparent'};text-shadow:${p ? (p === p.toUpperCase() ? '0 1px 2px rgba(0,0,0,.6)' : '0 1px 1px rgba(255,255,255,.25)') : 'none'};font-family:${PIECE_FONT};font-size:${Math.max(14, Math.min(44, Math.round(Math.min(88, 620) / 8 * 0.66)))}px;line-height:1">${pieceCharToText(p)}</div>`;
+        html += `<div style="display:flex;align-items:center;justify-content:center;background:${bg};font-size:${Math.max(14, Math.min(44, Math.round(Math.min(88, 620) / 8 * 0.66)))}px;line-height:1">${p ? `<img src="${pieceImg(p)}" alt="${p}" style="width:82%;height:82%;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none">` : ''}</div>`;
       }
     }
     el.innerHTML = html;
