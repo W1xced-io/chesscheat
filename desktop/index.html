@@ -33,7 +33,11 @@
 const FILES='abcdefgh';
 const squareCode=(sq)=>`${FILES.indexOf(sq[0])+1}${sq[1]}`;
 const pieceChar=(p)=>({K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'}[p]||'');
-const pieceImg = (p) => `https://www.chess.com/bundles/web/images/pieces/neo/${p}.png`;
+const pieceImg = (p) => {
+  const color = p === p.toUpperCase() ? 'w' : 'b';
+  const type = p.toUpperCase();
+  return `https://www.chess.com/bundles/web/images/pieces/neo/${color}${type}.png`;
+};
 const pieceFont = '"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","DejaVu Sans",sans-serif';
 let flipped=false, state={fen:'',grid:{},best:'',score:null,depth:0,status:'idle'};
 function gridFromFen(fen){
