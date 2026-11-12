@@ -574,7 +574,7 @@
   const pieceImg = (p) => {
     const color = p === p.toUpperCase() ? 'w' : 'b';
     const type = p.toUpperCase();
-    return `https://www.chess.com/bundles/web/images/pieces/neo/${color}${type}.png`;
+    return `https://lichess1.org/assets/piece/cburnett/${color}${type}.svg`;
   };
 
   const PIECE_FONT = '"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","DejaVu Sans",sans-serif';

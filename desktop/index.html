@@ -36,7 +36,7 @@ const pieceChar=(p)=>({K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',k:'♚',q
 const pieceImg = (p) => {
   const color = p === p.toUpperCase() ? 'w' : 'b';
   const type = p.toUpperCase();
-  return `https://www.chess.com/bundles/web/images/pieces/neo/${color}${type}.png`;
+  return `https://lichess1.org/assets/piece/cburnett/${color}${type}.svg`;
 };
 const pieceFont = '"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","DejaVu Sans",sans-serif';
 let flipped=false, state={fen:'',grid:{},best:'',score:null,depth:0,status:'idle'};
