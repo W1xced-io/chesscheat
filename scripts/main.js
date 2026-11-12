@@ -502,24 +502,22 @@
     overlayRoot = document.createElement('div');
     overlayRoot.id = 'cc-overlay';
     overlayRoot.style.cssText = [
-      'position:fixed','top:16px','left:16px','z-index:2147483645',
-      'background:linear-gradient(160deg,rgba(24,26,32,.6),rgba(12,14,18,.54))',
-      'color:#eef2f8','font:12px/1.3 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif',
-      'border:1px solid rgba(255,255,255,.12)','border-radius:14px','padding:10px',
-      'box-shadow:0 8px 24px rgba(0,0,0,.24), 0 1px 0 rgba(255,255,255,.05) inset',
-      'backdrop-filter:blur(20px) saturate(150%)','-webkit-backdrop-filter:blur(20px) saturate(150%)',
-      'user-select:none','box-sizing:border-box','display:flex','flex-direction:column','gap:8px'
+      'position:fixed','inset:0','z-index:2147483645',
+      'background:radial-gradient(120% 120% at 50% 0%, rgba(10,12,16,.6), rgba(6,8,11,.82))',
+      'color:#eef2f8','font:14px/1.3 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif',
+      'user-select:none','box-sizing:border-box','display:flex','flex-direction:column','align-items:center','justify-content:center','gap:16px','padding:20px',
+      'backdrop-filter:blur(10px) saturate(140%)','-webkit-backdrop-filter:blur(10px) saturate(140%)'
     ].join(';');
     overlayRoot.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <span style="font-weight:600;letter-spacing:.2px">Chesscheat Overlay</span>
-        <div style="display:flex;gap:6px">
-          <button id="cc-ov-flip" title="Flip board" style="all:unset;cursor:pointer;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:11px">Flip</button>
-          <button id="cc-ov-close" title="Close overlay" style="all:unset;cursor:pointer;padding:3px 8px;border-radius:7px;background:rgba(235,87,87,.16);border:1px solid rgba(235,87,87,.3);font-size:11px">✕</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;width:min(92vw,560px)">
+        <span style="font-weight:700;letter-spacing:.3px;font-size:1.1em">Chesscheat Overlay</span>
+        <div style="display:flex;gap:8px">
+          <button id="cc-ov-flip" title="Flip board" style="all:unset;cursor:pointer;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:12px">Flip</button>
+          <button id="cc-ov-close" title="Close overlay" style="all:unset;cursor:pointer;padding:6px 12px;border-radius:8px;background:rgba(235,87,87,.16);border:1px solid rgba(235,87,87,.3);font-size:12px">✕</button>
         </div>
       </div>
-      <div id="cc-ov-board" style="display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:min(46vh,360px);height:min(46vh,360px);border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.1)"></div>
-      <div style="display:flex;justify-content:space-between;gap:8px;font-size:.9em;opacity:.92">
+      <div id="cc-ov-board" style="display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:min(86vmin,560px);height:min(86vmin,560px);border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 60px rgba(0,0,0,.45)"></div>
+      <div style="display:flex;justify-content:space-between;gap:16px;font-size:1em;opacity:.94;width:min(92vw,560px)">
         <span id="cc-ov-best">--</span><span id="cc-ov-eval">--</span><span id="cc-ov-depth">--</span>
       </div>
     `;
@@ -561,7 +559,7 @@
           if (sq === from) { bg = 'rgba(235,87,87,.55)'; }
           if (sq === to) { bg = 'rgba(72,193,249,.5)'; }
         }
-        html += `<div style="display:flex;align-items:center;justify-content:center;background:${bg};color:${p ? (p === p.toUpperCase() ? '#fff' : '#111') : 'transparent'};font-size:${Math.max(10, Math.min(22, Math.round(Math.min(46, 360) / 8 * 0.7)))}px;line-height:1">${pieceCharToText(p)}</div>`;
+        html += `<div style="display:flex;align-items:center;justify-content:center;background:${bg};color:${p ? (p === p.toUpperCase() ? '#fff' : '#111') : 'transparent'};font-size:${Math.max(12, Math.min(40, Math.round(Math.min(86, 560) / 8 * 0.62)))}px;line-height:1">${pieceCharToText(p)}</div>`;
       }
     }
     el.innerHTML = html;
