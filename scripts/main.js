@@ -474,31 +474,31 @@
     root.id = 'cc-mini-gui';
     root.style.cssText = [
       'position:fixed','top:16px','right:16px','z-index:2147483647',
-      'width:250px','height:200px','min-width:190px','min-height:176px','max-width:520px','max-height:430px',
-      'background:linear-gradient(160deg,rgba(26,28,34,.66),rgba(14,16,21,.60))','color:#eef2f8',
+      'width:238px','height:174px','min-width:184px','min-height:150px','max-width:520px','max-height:430px',
+      'background:linear-gradient(160deg,rgba(24,26,32,.58),rgba(12,14,18,.52))','color:#eef2f8',
       'font:13px/1.35 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif',
-      'border:1px solid rgba(255,255,255,.14)','border-radius:14px','padding:11px 12px 13px',
-      'box-shadow:0 10px 30px rgba(0,0,0,.28), 0 1px 0 rgba(255,255,255,.06) inset',
-      'backdrop-filter:blur(22px) saturate(150%)','-webkit-backdrop-filter:blur(22px) saturate(150%)',
-      'user-select:none','box-sizing:border-box','overflow:hidden','display:flex','flex-direction:column','gap:9px'
+      'border:1px solid rgba(255,255,255,.10)','border-radius:16px','padding:10px 12px 12px',
+      'box-shadow:0 8px 24px rgba(0,0,0,.22), 0 1px 0 rgba(255,255,255,.05) inset',
+      'backdrop-filter:blur(24px) saturate(150%)','-webkit-backdrop-filter:blur(24px) saturate(150%)',
+      'user-select:none','box-sizing:border-box','overflow:hidden','display:flex','flex-direction:column','gap:8px'
     ].join(';');
 
     root.innerHTML = `
-      <div id="cc-drag" style="cursor:move;font-weight:600;font-size:1em;letter-spacing:.2px;display:flex;justify-content:space-between;align-items:center;opacity:.95;flex:0 0 auto">
-        <span>Chesscheat</span><span style="font-weight:500;font-size:.9em;opacity:.85">G: <span id="cc-toggle">ON</span></span>
+      <div id="cc-drag" style="cursor:move;font-weight:600;font-size:1em;letter-spacing:.2px;display:flex;justify-content:space-between;align-items:center;opacity:.95;flex:0 0 auto;padding:1px 2px">
+        <span>Chesscheat</span><span style="font-weight:500;font-size:.9em;opacity:.8">G: <span id="cc-toggle">ON</span></span>
       </div>
       <div id="cc-controls" style="display:flex;gap:8px;align-items:stretch;flex:1 1 auto;min-height:0">
-        <button id="cc-start" style="all:unset;cursor:pointer;flex:1 1 0;background:#2f7df6;padding:8px 10px;border-radius:9px;font-size:.95em;font-weight:600;letter-spacing:.2px;box-shadow:none;display:flex;align-items:center;justify-content:center;text-align:center;transition:filter .12s ease, transform .06s ease">Start</button>
-        <label style="font-size:.9em;opacity:.92;display:flex;gap:6px;align-items:center;justify-content:center;flex:0 0 auto;padding:0 8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:9px">Depth<input id="cc-depth" type="number" min="1" max="30" value="${globalDepth}" style="width:3.5em;background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:6px;padding:4px 6px;font-size:1em;outline:none"></label>
+        <button id="cc-start" style="all:unset;cursor:pointer;flex:1 1 0;background:#2f7df6;padding:8px 10px;border-radius:10px;font-size:.95em;font-weight:600;letter-spacing:.2px;box-shadow:none;display:flex;align-items:center;justify-content:center;text-align:center;transition:filter .12s ease, transform .06s ease">Start</button>
+        <label style="font-size:.9em;opacity:.9;display:flex;gap:6px;align-items:center;justify-content:center;flex:0 0 auto;padding:0 8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px">Depth<input id="cc-depth" type="number" min="1" max="30" value="${globalDepth}" style="width:3.2em;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:4px 6px;font-size:1em;outline:none"></label>
       </div>
-      <div id="cc-flash-row" style="display:flex;gap:8px;align-items:center;flex:0 0 auto;font-size:.85em">
-        <button id="cc-flashkey" title="Click to set flash key" style="all:unset;cursor:pointer;flex:0 0 auto;padding:4px 8px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)">Flash: <span id="cc-flashkey-label"></span></button>
+      <div id="cc-flash-row" style="display:flex;gap:8px;align-items:center;flex:0 0 auto;font-size:.84em;opacity:.9">
+        <button id="cc-flashkey" title="Click to set flash key" style="all:unset;cursor:pointer;flex:0 0 auto;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)">Flash: <span id="cc-flashkey-label"></span></button>
         <label style="display:flex;gap:6px;align-items:center;opacity:.9;cursor:pointer"><input id="cc-hide" type="checkbox" ${hideUntilKey ? 'checked' : ''} style="accent-color:#4a90ff">Hide until key</label>
       </div>
-      <label id="cc-hide-gui-wrap" style="display:${hideUntilKey ? 'flex' : 'none'};gap:6px;align-items:center;flex:0 0 auto;font-size:.82em;opacity:.85;cursor:pointer;padding-left:6px"><input id="cc-hide-gui" type="checkbox" ${flashWhenGuiHidden ? 'checked' : ''} style="accent-color:#4a90ff">Work when GUI hidden (G)</label>
-      <div id="cc-status" style="font-size:.9em;opacity:.94;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:7px 9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:8px;flex:0 0 auto">idle (G toggle)</div>
-      <div id="cc-resize" title="Resize" style="position:absolute;right:5px;bottom:5px;width:16px;height:16px;cursor:nwse-resize;opacity:.65;display:flex;align-items:flex-end;justify-content:flex-end">
-        <svg viewBox="0 0 12 12" width="16" height="16" aria-hidden="true"><path d="M11 3 L3 11" stroke="rgba(255,255,255,.45)" stroke-width="1.1" stroke-linecap="round"/><path d="M11 6 L6 11" stroke="rgba(255,255,255,.45)" stroke-width="1.1" stroke-linecap="round"/><path d="M11 9 L9 11" stroke="rgba(255,255,255,.45)" stroke-width="1.1" stroke-linecap="round"/></svg>
+      <label id="cc-hide-gui-wrap" style="display:${hideUntilKey ? 'flex' : 'none'};gap:6px;align-items:center;flex:0 0 auto;font-size:.8em;opacity:.82;cursor:pointer;padding-left:6px"><input id="cc-hide-gui" type="checkbox" ${flashWhenGuiHidden ? 'checked' : ''} style="accent-color:#4a90ff">Work when GUI hidden (G)</label>
+      <div id="cc-status" style="font-size:.86em;opacity:.92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:5px 8px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05);border-radius:8px;flex:0 0 auto">idle (G toggle)</div>
+      <div id="cc-resize" title="Resize" style="position:absolute;right:5px;bottom:5px;width:16px;height:16px;cursor:nwse-resize;opacity:.6;display:flex;align-items:flex-end;justify-content:flex-end">
+        <svg viewBox="0 0 12 12" width="16" height="16" aria-hidden="true"><path d="M11 3 L3 11" stroke="rgba(255,255,255,.4)" stroke-width="1.1" stroke-linecap="round"/><path d="M11 6 L6 11" stroke="rgba(255,255,255,.4)" stroke-width="1.1" stroke-linecap="round"/><path d="M11 9 L9 11" stroke="rgba(255,255,255,.4)" stroke-width="1.1" stroke-linecap="round"/></svg>
       </div>
     `;
 
@@ -594,7 +594,7 @@
     let resizing = false, startX = 0, startY = 0, startW = 0, startH = 0;
     const updateScale = () => {
       const rect = root.getBoundingClientRect();
-      const scale = Math.min(rect.width / 250, rect.height / 200);
+      const scale = Math.min(rect.width / 238, rect.height / 174);
       root.style.fontSize = `${Math.max(12, Math.min(22, 13 * scale))}px`;
     };
     resizeHandle.addEventListener('mousedown', (e) => {
@@ -607,7 +607,7 @@
     window.addEventListener('mousemove', (e) => {
       if (!resizing) return;
       root.style.width = `${Math.min(520, Math.max(190, startW + (e.clientX - startX)))}px`;
-      root.style.height = `${Math.min(430, Math.max(176, startH + (e.clientY - startY)))}px`;
+      root.style.height = `${Math.min(430, Math.max(150, startH + (e.clientY - startY)))}px`;
       updateScale();
     });
     window.addEventListener('mouseup', () => { resizing = false; });
