@@ -64,7 +64,7 @@ function render(){
   for(const r of ranks) for(const f of files){
     const sq=`${f}${r}`; const p=state.grid[sq]||''; const dark=(f+r)%2===0;
     let bg=dark?'#4b5a6b':'#d7dee6';
-    if(state.mine!==false && state.best && state.best.length>=4){
+    if(state.mine===true && state.best && state.best.length>=4){
       const from=squareCode(state.best.slice(0,2)), to=squareCode(state.best.slice(2,4));
       if(sq===from) bg='rgba(235,87,87,.6)';
       if(sq===to) bg='rgba(72,193,249,.55)';
