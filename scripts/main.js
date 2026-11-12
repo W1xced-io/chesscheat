@@ -199,6 +199,16 @@
     return lastPosInfo.turn === lastPosInfo.playingAs;
   }
 
+  function sendDesktopState() {
+    try {
+      const board = getBoard();
+      const grid = board ? readGrid(board) : {};
+      const score = lastScore ? (lastScore.type === 'mate' ? { type: 'mate', value: lastScore.value } : { type: 'cp', value: lastScore.value }) : null;
+      const payload = JSON.stringify({ grid, best: lastBestMove || '', score, depth: lastDepth || 0, status: !running ? 'stopped' : (!lastBestMove ? 'thinking' : 'best: ' + lastBestMove) });
+      fetch('http://127.0.0.1:43117/state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, mode: 'cors' }).catch(() => {});
+    } catch (e) {}
+  }
+
   function publishOverlayState() {
     try {
       const board = getBoard();
@@ -212,6 +222,7 @@
         depth: lastDepth || 0,
         status: !running ? 'stopped' : (!lastBestMove ? 'thinking' : 'best: ' + lastBestMove)
       }));
+      sendDesktopState();
     } catch (e) {}
   }
 
