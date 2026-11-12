@@ -97,7 +97,7 @@
         if (/^[wb][pnbrqk]$/.test(cls)) piece = cls;
         else if (/^square-[1-8][1-8]$/.test(cls)) square = cls.slice(7);
       });
-      if (piece && square) grid[square] = piece;
+      if (piece && square) grid[square] = piece[0] === 'w' ? piece[1].toUpperCase() : piece[1];
     });
     return grid;
   }
@@ -110,7 +110,7 @@
         const piece = grid[`${file}${rank}`];
         if (!piece) { empty++; continue; }
         if (empty) { row += empty; empty = 0; }
-        row += piece[0] === 'w' ? piece[1].toUpperCase() : piece[1];
+        row += piece;
       }
       if (empty) row += empty;
       rows.push(row);
@@ -120,13 +120,13 @@
 
   function castlingFromGrid(grid) {
     let rights = '';
-    if (grid['51'] === 'wk') {
-      if (grid['81'] === 'wr') rights += 'K';
-      if (grid['11'] === 'wr') rights += 'Q';
+    if (grid['51'] === 'K') {
+      if (grid['81'] === 'R') rights += 'K';
+      if (grid['11'] === 'R') rights += 'Q';
     }
-    if (grid['58'] === 'bk') {
-      if (grid['88'] === 'br') rights += 'k';
-      if (grid['18'] === 'br') rights += 'q';
+    if (grid['58'] === 'k') {
+      if (grid['88'] === 'r') rights += 'k';
+      if (grid['18'] === 'r') rights += 'q';
     }
     return rights || '-';
   }
@@ -136,7 +136,7 @@
     for (const el of highlights) {
       const cls = Array.from(el.classList).find((c) => /^square-[1-8][1-8]$/.test(c));
       const piece = cls && grid[cls.slice(7)];
-      if (piece) return piece[0];
+      if (piece) return piece === piece.toUpperCase() ? 'w' : 'b';
     }
     return null;
   }
@@ -144,10 +144,10 @@
   function enPassantSquare(previous, grid, changed) {
     for (const sq of changed) {
       const piece = grid[sq];
-      if (!piece || piece[1] !== 'p') continue;
+      if (!piece || piece.toLowerCase() !== 'p') continue;
       const file = sq[0], fileLetter = FILES[Number(file) - 1];
-      if (piece === 'wp' && sq[1] === '4' && previous[`${file}2`] === 'wp' && !grid[`${file}2`]) return `${fileLetter}3`;
-      if (piece === 'bp' && sq[1] === '5' && previous[`${file}7`] === 'bp' && !grid[`${file}7`]) return `${fileLetter}6`;
+      if (piece === 'P' && sq[1] === '4' && previous[`${file}2`] === 'P' && !grid[`${file}2`]) return `${fileLetter}3`;
+      if (piece === 'p' && sq[1] === '5' && previous[`${file}7`] === 'p' && !grid[`${file}7`]) return `${fileLetter}6`;
     }
     return '-';
   }
@@ -155,7 +155,7 @@
   function readPositionFromDom(board, state) {
     const grid = readGrid(board);
     const pieces = Object.values(grid);
-    if (!pieces.includes('wk') || !pieces.includes('bk')) return null;
+    if (!pieces.includes('K') || !pieces.includes('k')) return null;
     const changed = state.grid ? Object.keys({ ...state.grid, ...grid }).filter((sq) => state.grid[sq] !== grid[sq]) : [];
     let { turn, ep } = state;
     if (!state.grid || changed.length > 4) {
@@ -163,7 +163,7 @@
       ep = '-';
     } else if (changed.length > 0) {
       const mover = changed.map((sq) => grid[sq]).find(Boolean);
-      if (mover) turn = mover[0] === 'w' ? 'b' : 'w';
+      if (mover) turn = mover === mover.toUpperCase() ? 'b' : 'w';
       ep = enPassantSquare(state.grid, grid, changed);
     }
     state.grid = grid; state.turn = turn; state.ep = ep;
