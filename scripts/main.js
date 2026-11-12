@@ -522,29 +522,36 @@
     overlayRoot.id = 'cc-overlay';
     overlayRoot.style.cssText = [
       'position:fixed','inset:0','z-index:2147483645',
-      'background:radial-gradient(120% 120% at 50% 0%, rgba(10,12,16,.6), rgba(6,8,11,.82))',
-      'color:#eef2f8','font:14px/1.3 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif',
-      'user-select:none','box-sizing:border-box','display:flex','flex-direction:column','align-items:center','justify-content:center','gap:16px','padding:20px',
+      'background:radial-gradient(120% 120% at 50% 0%, rgba(10,12,16,.72), rgba(6,8,11,.92))',
+      'color:#eef2f8','font:14px/1.35 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif',
+      'user-select:none','box-sizing:border-box','display:none','flex-direction:column','align-items:center','justify-content:center','gap:14px','padding:20px',
       'backdrop-filter:blur(10px) saturate(140%)','-webkit-backdrop-filter:blur(10px) saturate(140%)'
     ].join(';');
     overlayRoot.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;width:min(92vw,560px)">
-        <span style="font-weight:700;letter-spacing:.3px;font-size:1.1em">Chesscheat Overlay</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;width:min(94vmin,620px)">
+        <span style="font-weight:700;letter-spacing:.3px;font-size:1.15em">Chesscheat Overlay</span>
         <div style="display:flex;gap:8px">
           <button id="cc-ov-flip" title="Flip board" style="all:unset;cursor:pointer;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:12px">Flip</button>
-          <button id="cc-ov-close" title="Close overlay" style="all:unset;cursor:pointer;padding:6px 12px;border-radius:8px;background:rgba(235,87,87,.16);border:1px solid rgba(235,87,87,.3);font-size:12px">✕</button>
+          <button id="cc-ov-close" title="Close overlay (O)" style="all:unset;cursor:pointer;padding:6px 12px;border-radius:8px;background:rgba(235,87,87,.16);border:1px solid rgba(235,87,87,.3);font-size:12px">✕</button>
         </div>
       </div>
-      <div id="cc-ov-board" style="display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:min(86vmin,560px);height:min(86vmin,560px);border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 60px rgba(0,0,0,.45)"></div>
-      <div style="display:flex;justify-content:space-between;gap:16px;font-size:1em;opacity:.94;width:min(92vw,560px)">
+      <div id="cc-ov-board" style="display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:min(88vmin,620px);height:min(88vmin,620px);border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 60px rgba(0,0,0,.45)"></div>
+      <div style="display:flex;justify-content:space-between;gap:16px;font-size:1em;opacity:.94;width:min(94vmin,620px)">
         <span id="cc-ov-best">--</span><span id="cc-ov-eval">--</span><span id="cc-ov-depth">--</span>
       </div>
     `;
     document.documentElement.appendChild(overlayRoot);
     overlayFlipped = false;
     renderOverlayBoard();
-    overlayRoot.querySelector('#cc-ov-close').addEventListener('click', () => { overlayRoot.style.display = 'none'; });
+    overlayRoot.querySelector('#cc-ov-close').addEventListener('click', () => setOverlayVisible(false));
     overlayRoot.querySelector('#cc-ov-flip').addEventListener('click', () => { overlayFlipped = !overlayFlipped; renderOverlayBoard(); });
+  }
+
+  function setOverlayVisible(v) {
+    if (!overlayRoot) createOverlay();
+    overlayRoot.style.display = v ? 'flex' : 'none';
+    const boardEl = getBoard();
+    if (boardEl) boardEl.style.visibility = v ? 'hidden' : '';
   }
 
   function pieceCharToText(p) {
@@ -558,10 +565,7 @@
     if (!el) return;
     const board = getBoard();
     let grid = {};
-    if (board) {
-      try { const pos = readPosition(board); if (pos && pos.source === 'dom') {} } catch (e) {}
-      try { grid = readGrid(board); } catch (e) {}
-    }
+    if (board) { try { grid = readGrid(board); } catch (e) {} }
     const files = overlayFlipped ? [8,7,6,5,4,3,2,1] : [1,2,3,4,5,6,7,8];
     const ranks = overlayFlipped ? [1,2,3,4,5,6,7,8] : [8,7,6,5,4,3,2,1];
     let html = '';
@@ -571,14 +575,13 @@
         const p = grid[sq] || '';
         const dark = (f + r) % 2 === 0;
         let bg = dark ? '#4b5a6b' : '#d7dee6';
-        let highlight = '';
         if (lastBestMove && lastBestMove.length >= 4) {
           const from = squareCode(lastBestMove.slice(0, 2));
           const to = squareCode(lastBestMove.slice(2, 4));
-          if (sq === from) { bg = 'rgba(235,87,87,.55)'; }
-          if (sq === to) { bg = 'rgba(72,193,249,.5)'; }
+          if (sq === from) { bg = 'rgba(235,87,87,.6)'; }
+          if (sq === to) { bg = 'rgba(72,193,249,.55)'; }
         }
-        html += `<div style="display:flex;align-items:center;justify-content:center;background:${bg};color:${p ? (p === p.toUpperCase() ? '#fff' : '#111') : 'transparent'};font-size:${Math.max(12, Math.min(40, Math.round(Math.min(86, 560) / 8 * 0.62)))}px;line-height:1">${pieceCharToText(p)}</div>`;
+        html += `<div style="display:flex;align-items:center;justify-content:center;background:${bg};color:${p ? (p === p.toUpperCase() ? '#fff' : '#111') : 'transparent'};font-size:${Math.max(12, Math.min(40, Math.round(Math.min(88, 620) / 8 * 0.62)))}px;line-height:1">${pieceCharToText(p)}</div>`;
       }
     }
     el.innerHTML = html;
@@ -632,6 +635,7 @@
       <div id="cc-flash-row" style="display:flex;gap:8px;align-items:center;flex:0 0 auto;font-size:.84em;opacity:.9;flex-wrap:wrap">
         <button id="cc-flashkey" title="Click to set flash key" style="all:unset;cursor:pointer;flex:0 0 auto;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)">Flash: <span id="cc-flashkey-label"></span></button>
         <button id="cc-best" title="Reset to best move" style="all:unset;cursor:pointer;flex:0 0 auto;padding:3px 8px;border-radius:7px;background:rgba(47,125,246,.14);border:1px solid rgba(47,125,246,.3)">Best</button>
+        <button id="cc-overlay-btn" title="Toggle overlay (O)" style="all:unset;cursor:pointer;flex:0 0 auto;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)">Overlay</button>
         <label style="display:flex;gap:6px;align-items:center;opacity:.9;cursor:pointer"><input id="cc-hide" type="checkbox" ${hideUntilKey ? 'checked' : ''} style="accent-color:#4a90ff">Hide until key</label>
       </div>
       <label id="cc-hide-gui-wrap" style="display:${hideUntilKey ? 'flex' : 'none'};gap:6px;align-items:center;flex:0 0 auto;font-size:.8em;opacity:.82;cursor:pointer;padding-left:6px"><input id="cc-hide-gui" type="checkbox" ${flashWhenGuiHidden ? 'checked' : ''} style="accent-color:#4a90ff">Work when GUI hidden (G)</label>
@@ -672,6 +676,8 @@
       updateStatusDisplay();
     });
     const bestBtn = root.querySelector('#cc-best');
+    const overlayBtn = root.querySelector('#cc-overlay-btn');
+    if (overlayBtn) overlayBtn.addEventListener('click', () => setOverlayVisible(!overlayRoot || overlayRoot.style.display === 'none'));
     if (bestBtn) bestBtn.addEventListener('click', () => {
       if (!running) return;
       const board = getBoard();
@@ -815,10 +821,11 @@
     }
     if (isTypingTarget(e.target)) return;
     if (e.key === 'g' || e.key === 'G') { toggleHints(); return; }
+    if (e.key === 'o' || e.key === 'O') { e.preventDefault(); setOverlayVisible(!overlayRoot || overlayRoot.style.display === 'none'); return; }
     if (e.key === flashKey) { e.preventDefault(); flashMove(); }
   }, true);
 
-  function init() { createGui(); createOverlay(); }
+  function init() { createGui(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
