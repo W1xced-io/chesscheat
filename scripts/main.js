@@ -219,6 +219,7 @@
       const board = getBoard();
       const pos = board ? readPosition(board) : null;
       const grid = board ? readGrid(board) : {};
+      const fenPlacement = pos && pos.fen ? pos.fen : placementFromGrid(grid);
       const score = lastScore ? (lastScore.type === 'mate' ? { type: 'mate', value: lastScore.value } : { type: 'cp', value: lastScore.value }) : null;
       const mine = isMyTurn();
       localStorage.setItem('cc-ov-state', JSON.stringify({
