@@ -511,7 +511,7 @@
       </div>
       <div id="cc-controls" style="display:flex;gap:8px;align-items:stretch;flex:1 1 auto;min-height:0">
         <button id="cc-start" style="all:unset;cursor:pointer;flex:1 1 0;background:#2f7df6;padding:8px 10px;border-radius:10px;font-size:.95em;font-weight:600;letter-spacing:.2px;box-shadow:none;display:flex;align-items:center;justify-content:center;text-align:center;transition:filter .12s ease, transform .06s ease">Start</button>
-        <label style="font-size:.9em;opacity:.9;display:flex;gap:6px;align-items:center;justify-content:center;flex:0 0 auto;padding:0 8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px">Depth<input id="cc-depth" type="number" min="1" max="30" value="${globalDepth}" style="width:3.2em;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:4px 6px;font-size:1em;outline:none"></label>
+        <label style="font-size:.9em;opacity:.9;display:flex;gap:6px;align-items:center;justify-content:center;flex:0 0 auto;padding:0 8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px">Depth<input id="cc-depth" type="number" min="1" max="30" value="${globalDepth}" style="width:2.3em;background:transparent;color:#fff;border:none;border-bottom:1px dashed rgba(255,255,255,.25);border-radius:0;padding:2px 2px;font-size:1em;outline:none;text-align:center"></label>
       </div>
       <div id="cc-mp-row" style="display:flex;gap:8px;align-items:center;flex:0 0 auto;font-size:.84em;opacity:.9">
         <button id="cc-mp-prev" title="Previous move" style="all:unset;cursor:pointer;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)">◀</button>
@@ -524,8 +524,9 @@
           <option value="5"${multiPv === 5 ? ' selected' : ''}>5</option>
         </select></label>
       </div>
-      <div id="cc-flash-row" style="display:flex;gap:8px;align-items:center;flex:0 0 auto;font-size:.84em;opacity:.9">
+      <div id="cc-flash-row" style="display:flex;gap:8px;align-items:center;flex:0 0 auto;font-size:.84em;opacity:.9;flex-wrap:wrap">
         <button id="cc-flashkey" title="Click to set flash key" style="all:unset;cursor:pointer;flex:0 0 auto;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)">Flash: <span id="cc-flashkey-label"></span></button>
+        <button id="cc-best" title="Reset to best move" style="all:unset;cursor:pointer;flex:0 0 auto;padding:3px 8px;border-radius:7px;background:rgba(47,125,246,.14);border:1px solid rgba(47,125,246,.3)">Best</button>
         <label style="display:flex;gap:6px;align-items:center;opacity:.9;cursor:pointer"><input id="cc-hide" type="checkbox" ${hideUntilKey ? 'checked' : ''} style="accent-color:#4a90ff">Hide until key</label>
       </div>
       <label id="cc-hide-gui-wrap" style="display:${hideUntilKey ? 'flex' : 'none'};gap:6px;align-items:center;flex:0 0 auto;font-size:.8em;opacity:.82;cursor:pointer;padding-left:6px"><input id="cc-hide-gui" type="checkbox" ${flashWhenGuiHidden ? 'checked' : ''} style="accent-color:#4a90ff">Work when GUI hidden (G)</label>
@@ -564,6 +565,10 @@
       lastBestMove = mv || lastBestMove;
       renderHighlights(lastBestMove);
       updateStatusDisplay();
+    });
+    const bestBtn = root.querySelector('#cc-best');
+    if (bestBtn) bestBtn.addEventListener('click', () => {
+      if (running && lastPosKey) requestBestMove(lastPosKey, lastPosKey);
     });
     if (mpNext) mpNext.addEventListener('click', () => {
       if (multiPv <= 1) return;
