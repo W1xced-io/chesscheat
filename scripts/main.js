@@ -167,7 +167,7 @@
       ep = enPassantSquare(state.grid, grid, changed);
     }
     state.grid = grid; state.turn = turn; state.ep = ep;
-    return { fen: `${placementFromGrid(grid)} ${turn} ${castlingFromGrid(grid)} ${ep} 0 1`, turn, playingAs: null, gameOver: false, source: 'dom' };
+    return { fen: `${placementFromGrid(grid)} ${turn} ${castlingFromGrid(grid)} ${ep} 0 1`, turn, playingAs: (board.classList.contains('flipped') ? 'b' : 'w'), gameOver: false, source: 'dom' };
   }
 
   function readPosition(board) {
