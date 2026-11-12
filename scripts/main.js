@@ -497,8 +497,8 @@
       </div>
       <label id="cc-hide-gui-wrap" style="display:${hideUntilKey ? 'flex' : 'none'};gap:6px;align-items:center;flex:0 0 auto;font-size:.82em;opacity:.85;cursor:pointer;padding-left:6px"><input id="cc-hide-gui" type="checkbox" ${flashWhenGuiHidden ? 'checked' : ''} style="accent-color:#4a90ff">Work when GUI hidden (G)</label>
       <div id="cc-status" style="font-size:.9em;opacity:.94;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:7px 9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:8px;flex:0 0 auto">idle (G toggle)</div>
-      <div id="cc-resize" title="Resize" style="position:absolute;right:4px;bottom:4px;width:14px;height:14px;cursor:nwse-resize;opacity:.7">
-        <svg viewBox="0 0 10 10" width="14" height="14" aria-hidden="true"><path d="M9 1v8H1" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.5" stroke-linecap="round"/><path d="M9 5v4H5M9 8H8" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.2" stroke-linecap="round"/></svg>
+      <div id="cc-resize" title="Resize" style="position:absolute;right:5px;bottom:5px;width:16px;height:16px;cursor:nwse-resize;opacity:.65;display:flex;align-items:flex-end;justify-content:flex-end">
+        <svg viewBox="0 0 12 12" width="16" height="16" aria-hidden="true"><path d="M11 3 L3 11" stroke="rgba(255,255,255,.45)" stroke-width="1.1" stroke-linecap="round"/><path d="M11 6 L6 11" stroke="rgba(255,255,255,.45)" stroke-width="1.1" stroke-linecap="round"/><path d="M11 9 L9 11" stroke="rgba(255,255,255,.45)" stroke-width="1.1" stroke-linecap="round"/></svg>
       </div>
     `;
 
