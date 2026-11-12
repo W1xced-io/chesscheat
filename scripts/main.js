@@ -85,6 +85,9 @@
         if (p === 1) playingAs = 'w';
         else if (p === 2) playingAs = 'b';
       }
+      if (!playingAs) {
+        playingAs = (board.classList && board.classList.contains('flipped')) ? 'b' : 'w';
+      }
       return { fen, turn: fields[1], playingAs, gameOver: typeof game.isGameOver === 'function' && !!game.isGameOver(), source: 'api' };
     } catch (e) { return null; }
   }
