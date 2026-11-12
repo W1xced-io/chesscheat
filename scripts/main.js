@@ -27,6 +27,7 @@
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify({
         depth: globalDepth,
+        multiPv,
         flashKey,
         hideUntilKey,
         flashWhenGuiHidden
@@ -36,6 +37,7 @@
   const saved = loadSettings();
 
   let globalDepth = Math.min(30, Math.max(1, parseInt(saved.depth, 10) || 15));
+  let multiPv = Math.min(5, Math.max(1, parseInt(saved.multiPv, 10) || 1));
   let flashKey = (typeof saved.flashKey === 'string' && saved.flashKey) ? saved.flashKey : '`';
   let hideUntilKey = !!saved.hideUntilKey;
   let flashWhenGuiHidden = !!saved.flashWhenGuiHidden;
@@ -55,6 +57,8 @@
   let lastPv = '';
   let lastScore = null;
   let lastDepth = 0;
+  let lastPvLines = [];
+  let multiPvIdx = 0;
   let lastPosInfo = null;
   let guiVisible = true;
   let flashTimer = null;
@@ -224,15 +228,24 @@
     if (!engineReady) { el.textContent = 'loading engine...'; el.title = ''; return; }
     const parts = [];
     if (lastDepth) parts.push(`d${lastDepth}`);
-    if (lastScore) parts.push(formatScore(lastScore));
     const mine = isMyTurn();
     if (!mine && lastPosInfo && lastPosInfo.playingAs) parts.push('opp');
     const showMove = guiVisible && (!hideUntilKey || flashVisible) && mine;
+    if (multiPv > 1 && lastPvLines.length) {
+      const i = multiPvIdx;
+      const line = lastPvLines[i] || lastPvLines[0];
+      if (line) {
+        parts.push(formatScore(line.score));
+        if (showMove) parts.push(`${i + 1}/${multiPv}: ${line.move}`);
+      }
+    } else if (lastScore) {
+      parts.push(formatScore(lastScore));
+    }
     if (lastBestMove) {
-      if (showMove) {
+      if (showMove && multiPv === 1) {
         const board = getBoard();
         parts.push((board && sanFor(board, lastBestMove)) || lastBestMove);
-      } else if (hideUntilKey || !mine) {
+      } else if ((hideUntilKey || !mine) && multiPv === 1) {
         parts.push(mine ? 'hidden' : 'wait');
       }
     } else {
@@ -338,8 +351,14 @@
       const sc = data.match(/\bscore cp (-?\d+)/);
       if (sm) lastScore = { type: 'mate', value: parseInt(sm[1], 10) };
       else if (sc) lastScore = { type: 'cp', value: parseInt(sc[1], 10) };
+      const mp = data.match(/\bmultipv (\d+)/);
       const pv = data.match(/\bpv (.+)$/);
-      if (pv) lastPv = pv[1].trim();
+      if (pv && lastScore && lastDepth) {
+        const idx = mp ? parseInt(mp[1], 10) : 1;
+        lastPvLines[idx - 1] = { move: pv[1].trim().split(' ')[0], score: lastScore };
+        if (idx === 1) lastPv = pv[1].trim();
+        if (idx === multiPv) lastPvLines.length = multiPv;
+      }
       if (lastDepth) updateStatusDisplay();
     } else if (data.startsWith('bestmove')) {
       if (lastPosKey !== searchPosKey) return;
@@ -357,14 +376,17 @@
     searchPosKey = posKey;
     lastBestMove = '';
     lastPv = '';
+    lastPvLines = [];
     lastScore = null;
     lastDepth = 0;
+    multiPvIdx = 0;
     flashVisible = false;
     if (flashTimer) { clearTimeout(flashTimer); flashTimer = null; }
     clearHighlights();
     updateStatusDisplay();
     try {
       engine.postMessage('stop');
+      engine.postMessage(`setoption name MultiPV value ${multiPv}`);
       engine.postMessage(`position fen ${fen}`);
       engine.postMessage(`go depth ${globalDepth}`);
     } catch (e) {}
@@ -491,6 +513,17 @@
         <button id="cc-start" style="all:unset;cursor:pointer;flex:1 1 0;background:#2f7df6;padding:8px 10px;border-radius:10px;font-size:.95em;font-weight:600;letter-spacing:.2px;box-shadow:none;display:flex;align-items:center;justify-content:center;text-align:center;transition:filter .12s ease, transform .06s ease">Start</button>
         <label style="font-size:.9em;opacity:.9;display:flex;gap:6px;align-items:center;justify-content:center;flex:0 0 auto;padding:0 8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px">Depth<input id="cc-depth" type="number" min="1" max="30" value="${globalDepth}" style="width:3.2em;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:4px 6px;font-size:1em;outline:none"></label>
       </div>
+      <div id="cc-mp-row" style="display:flex;gap:8px;align-items:center;flex:0 0 auto;font-size:.84em;opacity:.9">
+        <button id="cc-mp-prev" title="Previous move" style="all:unset;cursor:pointer;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)">◀</button>
+        <button id="cc-mp-next" title="Next move" style="all:unset;cursor:pointer;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)">▶</button>
+        <label style="display:flex;gap:6px;align-items:center;opacity:.9;cursor:pointer">MultiPV<select id="cc-multipv" style="background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:3px 6px;font-size:1em;outline:none">
+          <option value="1"${multiPv === 1 ? ' selected' : ''}>1</option>
+          <option value="2"${multiPv === 2 ? ' selected' : ''}>2</option>
+          <option value="3"${multiPv === 3 ? ' selected' : ''}>3</option>
+          <option value="4"${multiPv === 4 ? ' selected' : ''}>4</option>
+          <option value="5"${multiPv === 5 ? ' selected' : ''}>5</option>
+        </select></label>
+      </div>
       <div id="cc-flash-row" style="display:flex;gap:8px;align-items:center;flex:0 0 auto;font-size:.84em;opacity:.9">
         <button id="cc-flashkey" title="Click to set flash key" style="all:unset;cursor:pointer;flex:0 0 auto;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)">Flash: <span id="cc-flashkey-label"></span></button>
         <label style="display:flex;gap:6px;align-items:center;opacity:.9;cursor:pointer"><input id="cc-hide" type="checkbox" ${hideUntilKey ? 'checked' : ''} style="accent-color:#4a90ff">Hide until key</label>
@@ -512,6 +545,34 @@
     const hideCb = root.querySelector('#cc-hide');
     const hideGuiCb = root.querySelector('#cc-hide-gui');
     const hideGuiWrap = root.querySelector('#cc-hide-gui-wrap');
+    const mpSelect = root.querySelector('#cc-multipv');
+    const mpPrev = root.querySelector('#cc-mp-prev');
+    const mpNext = root.querySelector('#cc-mp-next');
+    const applyMultiPv = (n, rerun) => {
+      multiPv = Math.min(5, Math.max(1, n));
+      if (mpSelect) mpSelect.value = String(multiPv);
+      multiPvIdx = 0;
+      saveSettings();
+      if (rerun && running && lastPosKey) requestBestMove(lastPosKey, lastPosKey);
+      else updateStatusDisplay();
+    };
+    if (mpSelect) mpSelect.addEventListener('change', () => applyMultiPv(parseInt(mpSelect.value, 10), true));
+    if (mpPrev) mpPrev.addEventListener('click', () => {
+      if (multiPv <= 1) return;
+      multiPvIdx = (multiPvIdx - 1 + multiPv) % multiPv;
+      const mv = lastPvLines[multiPvIdx] && lastPvLines[multiPvIdx].move;
+      lastBestMove = mv || lastBestMove;
+      renderHighlights(lastBestMove);
+      updateStatusDisplay();
+    });
+    if (mpNext) mpNext.addEventListener('click', () => {
+      if (multiPv <= 1) return;
+      multiPvIdx = (multiPvIdx + 1) % multiPv;
+      const mv = lastPvLines[multiPvIdx] && lastPvLines[multiPvIdx].move;
+      lastBestMove = mv || lastBestMove;
+      renderHighlights(lastBestMove);
+      updateStatusDisplay();
+    });
 
     const updateHideGuiOption = () => { if (hideGuiWrap) hideGuiWrap.style.display = hideUntilKey ? 'flex' : 'none'; };
     updateHideGuiOption();
