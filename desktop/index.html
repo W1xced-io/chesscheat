@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Chesscheat Overlay</title>
+<style>
+  :root { color-scheme: dark; }
+  html,body { margin:0; height:100%; background:transparent; overflow:hidden; }
+  body { font:13px/1.35 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif; color:#eef2f8; -webkit-app-region: drag; }
+  .wrap { padding:12px; display:flex; flex-direction:column; gap:10px; }
+  .head { display:flex; justify-content:space-between; align-items:center; font-weight:700; letter-spacing:.2px; -webkit-app-region: drag; }
+  .btns { display:flex; gap:8px; -webkit-app-region: no-drag; }
+  button { all:unset; cursor:pointer; padding:5px 10px; border-radius:8px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); font-size:12px; }
+  .accent { background:rgba(47,125,246,.18); border-color:rgba(47,125,246,.35); }
+  .board { display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(8,1fr); width:min(78vmin,420px); height:min(78vmin,420px); border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,.12); -webkit-app-region: no-drag; }
+  .meta { display:flex; justify-content:space-between; gap:8px; font-size:.95em; opacity:.95; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span>Chesscheat Overlay</span>
+    <div class="btns">
+      <button id="flip">Flip</button>
+      <button id="hide">✕</button>
+      <button id="pin" class="accent">Pin</button>
+    </div>
+  </div>
+  <div id="board" class="board"></div>
+  <div class="meta"><span id="best">--</span><span id="eval">--</span><span id="depth">--</span></div>
+</div>
+<script>
+const FILES='abcdefgh';
+const squareCode=(sq)=>`${FILES.indexOf(sq[0])+1}${sq[1]}`;
+const pieceChar=(p)=>({K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'}[p]||'');
+let flipped=false, state={grid:{},best:'',score:null,depth:0,status:'idle'};
+function fmtScore(s){ if(!s) return '--'; if(s.type==='mate') return 'M'+s.value; const v=s.value/100; return (v>=0?'+':'')+v.toFixed(2); }
+function render(){
+  const el=document.getElementById('board');
+  const files=flipped?[8,7,6,5,4,3,2,1]:[1,2,3,4,5,6,7,8];
+  const ranks=flipped?[1,2,3,4,5,6,7,8]:[8,7,6,5,4,3,2,1];
+  let html='';
+  for(const r of ranks) for(const f of files){
+    const sq=`${f}${r}`; const p=state.grid[sq]||''; const dark=(f+r)%2===0;
+    let bg=dark?'#4b5a6b':'#d7dee6';
+    if(state.best&&state.best.length>=4){
+      const from=squareCode(state.best.slice(0,2)), to=squareCode(state.best.slice(2,4));
+      if(sq===from) bg='rgba(235,87,87,.6)';
+      if(sq===to) bg='rgba(72,193,249,.55)';
+    }
+    html+=`<div style="display:flex;align-items:center;justify-content:center;background:${bg};color:${p?(p===p.toUpperCase()?'#fff':'#111'):'transparent'};font-size:clamp(12px,4.2vmin,34px);line-height:1">${pieceChar(p)}</div>`;
+  }
+  el.innerHTML=html;
+  document.getElementById('best').textContent=state.best||'--';
+  document.getElementById('eval').textContent=fmtScore(state.score);
+  document.getElementById('depth').textContent=state.depth?('d'+state.depth):'--';
+}
+document.getElementById('flip').addEventListener('click',()=>{ flipped=!flipped; render(); });
+document.getElementById('hide').addEventListener('click',()=>{ window.close(); });
+document.getElementById('pin').addEventListener('click',()=>{ /* always-on-top already */ });
+window.cc.onState((data)=>{ state=Object.assign(state,data); render(); });
+render();
+</script>
+</body>
+</html>
