@@ -39,7 +39,7 @@ const pieceImg = (p) => {
   return `https://lichess1.org/assets/piece/cburnett/${color}${type}.svg`;
 };
 const pieceFont = '"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","DejaVu Sans",sans-serif';
-let flipped=false, state={fen:'',grid:{},best:'',score:null,depth:0,status:'idle',mine:true,turn:'',playingAs:''};
+let flipped=false, userFlipped=false, state={fen:'',grid:{},best:'',score:null,depth:0,status:'idle',mine:true,turn:'',playingAs:''};
 function gridFromFen(fen){
   const grid={};
   if(!fen) return grid;
@@ -76,10 +76,15 @@ function render(){
   document.getElementById('eval').textContent=fmtScore(state.score);
   document.getElementById('depth').textContent=state.depth?('d'+state.depth):'--';
 }
-document.getElementById('flip').addEventListener('click',()=>{ flipped=!flipped; render(); });
+document.getElementById('flip').addEventListener('click',()=>{ flipped=!flipped; userFlipped=true; render(); });
 document.getElementById('hide').addEventListener('click',()=>{ window.close(); });
 document.getElementById('pin').addEventListener('click',()=>{ /* always-on-top already */ });
-window.cc.onState((data)=>{ state=Object.assign(state,data); if(data.grid) state.grid=data.grid; render(); });
+window.cc.onState((data)=>{
+  state=Object.assign(state,data);
+  if(data.grid) state.grid=data.grid;
+  if(!userFlipped && data.playingAs){ flipped = data.playingAs === 'b'; }
+  render();
+});
 render();
 </script>
 </body>
