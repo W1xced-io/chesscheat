@@ -52,6 +52,7 @@
   let domState = { grid: null, turn: 'w', ep: '-' };
   let lastPosKey = '';
   let searchPosKey = '';
+  let searchToken = 0;
   let searchFen = '';
   let lastBestMove = '';
   let lastPv = '';
@@ -343,8 +344,9 @@
 
   function onEngineMessage(event) {
     const data = String(event.data || '');
+    const token = searchToken;
     if (data.startsWith('info ')) {
-      if (lastPosKey !== searchPosKey) return;
+      if (token !== searchToken || lastPosKey !== searchPosKey) return;
       const d = data.match(/\bdepth (\d+)/);
       if (d) lastDepth = parseInt(d[1], 10);
       const sm = data.match(/\bscore mate (-?\d+)/);
@@ -361,7 +363,7 @@
       }
       if (lastDepth) updateStatusDisplay();
     } else if (data.startsWith('bestmove')) {
-      if (lastPosKey !== searchPosKey) return;
+      if (token !== searchToken || lastPosKey !== searchPosKey) return;
       const bestMove = data.split(' ')[1] || '';
       if (!bestMove || bestMove === '(none)' || bestMove === '0000') return;
       lastBestMove = bestMove;
@@ -374,6 +376,7 @@
     if (!engine || !engineReady) return;
     searchFen = fen;
     searchPosKey = posKey;
+    searchToken += 1;
     lastBestMove = '';
     lastPv = '';
     lastPvLines = [];
