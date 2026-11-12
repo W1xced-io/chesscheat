@@ -65,8 +65,6 @@
   let flashTimer = null;
   let flashVisible = false;
   let capturingKey = false;
-  let overlayRoot = null;
-  let overlayFlipped = false;
 
   function getBoard() {
     return document.querySelector('wc-chess-board');
@@ -216,30 +214,12 @@
 
   function publishOverlayState() {
     try {
-      const board = getBoard();
-      const pos = board ? readPosition(board) : null;
-      const grid = board ? readGrid(board) : {};
-      const fenPlacement = pos && pos.fen ? pos.fen : placementFromGrid(grid);
-      const score = lastScore ? (lastScore.type === 'mate' ? { type: 'mate', value: lastScore.value } : { type: 'cp', value: lastScore.value }) : null;
-      const mine = isMyTurn();
-      localStorage.setItem('cc-ov-state', JSON.stringify({
-        grid,
-        fen: fenPlacement,
-        best: (mine ? (lastBestMove || '') : ''),
-        score,
-        depth: lastDepth || 0,
-        status: !running ? 'stopped' : (!lastBestMove ? 'thinking' : (mine ? 'best: ' + lastBestMove : 'opp turn')),
-        turn: lastPosInfo ? lastPosInfo.turn : '',
-        playingAs: lastPosInfo ? lastPosInfo.playingAs : '',
-        mine
-      }));
       sendDesktopState();
     } catch (e) {}
   }
 
   function renderHighlights(bestMove) {
     publishOverlayState();
-    renderOverlayBoard();
     clearHighlights();
     if (!canShowHints() || !bestMove || bestMove.length < 4) return;
     if (hideUntilKey && !flashVisible) return;
@@ -444,7 +424,6 @@
     if (!pos || !pos.fen) return;
     lastPosInfo = pos;
     publishOverlayState();
-    renderOverlayBoard();
     if (pos.gameOver) { setStatus('game over'); return; }
     const key = pos.fen;
     if (key !== lastPosKey) {
@@ -538,96 +517,6 @@
     }, 700);
   }
 
-  function createOverlay() {
-    if (overlayRoot) { overlayRoot.style.display = 'flex'; return; }
-    overlayRoot = document.createElement('div');
-    overlayRoot.id = 'cc-overlay';
-    overlayRoot.style.cssText = [
-      'position:fixed','inset:0','z-index:2147483645',
-      'background:radial-gradient(120% 120% at 50% 0%, rgba(10,12,16,.72), rgba(6,8,11,.92))',
-      'color:#eef2f8','font:14px/1.35 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif',
-      'user-select:none','box-sizing:border-box','display:none','flex-direction:column','align-items:center','justify-content:center','gap:14px','padding:20px',
-      'backdrop-filter:blur(10px) saturate(140%)','-webkit-backdrop-filter:blur(10px) saturate(140%)'
-    ].join(';');
-    overlayRoot.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;width:min(94vmin,620px)">
-        <span style="font-weight:700;letter-spacing:.3px;font-size:1.15em">Chesscheat Overlay</span>
-        <div style="display:flex;gap:8px">
-          <button id="cc-ov-flip" title="Flip board" style="all:unset;cursor:pointer;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:12px">Flip</button>
-          <button id="cc-ov-close" title="Close overlay (O)" style="all:unset;cursor:pointer;padding:6px 12px;border-radius:8px;background:rgba(235,87,87,.16);border:1px solid rgba(235,87,87,.3);font-size:12px">✕</button>
-        </div>
-      </div>
-      <div id="cc-ov-board" style="display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:min(88vmin,620px);height:min(88vmin,620px);border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 60px rgba(0,0,0,.45)"></div>
-      <div style="display:flex;justify-content:space-between;gap:16px;font-size:1em;opacity:.94;width:min(94vmin,620px)">
-        <span id="cc-ov-best">--</span><span id="cc-ov-eval">--</span><span id="cc-ov-depth">--</span>
-      </div>
-    `;
-    document.documentElement.appendChild(overlayRoot);
-    overlayFlipped = false;
-    renderOverlayBoard();
-    overlayRoot.querySelector('#cc-ov-close').addEventListener('click', () => setOverlayVisible(false));
-    overlayRoot.querySelector('#cc-ov-flip').addEventListener('click', () => { overlayFlipped = !overlayFlipped; renderOverlayBoard(); });
-  }
-
-  function setOverlayVisible(v) {
-    if (!overlayRoot) createOverlay();
-    overlayRoot.style.display = v ? 'flex' : 'none';
-    const boardEl = getBoard();
-    if (boardEl) boardEl.style.visibility = v ? 'hidden' : '';
-  }
-
-  function pieceCharToText(p) {
-    const map = { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙', k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
-    return map[p] || '';
-  }
-
-  const pieceImg = (p) => {
-    const color = p === p.toUpperCase() ? 'w' : 'b';
-    const type = p.toUpperCase();
-    return `https://lichess1.org/assets/piece/cburnett/${color}${type}.svg`;
-  };
-
-  const PIECE_FONT = '"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","DejaVu Sans",sans-serif';
-
-  function renderOverlayBoard() {
-    if (!overlayRoot) return;
-    const el = overlayRoot.querySelector('#cc-ov-board');
-    if (!el) return;
-    const board = getBoard();
-    let grid = {};
-    if (board) { try { grid = readGrid(board); } catch (e) {} }
-    const files = overlayFlipped ? [8,7,6,5,4,3,2,1] : [1,2,3,4,5,6,7,8];
-    const ranks = overlayFlipped ? [1,2,3,4,5,6,7,8] : [8,7,6,5,4,3,2,1];
-    let html = '';
-    for (const r of ranks) {
-      for (const f of files) {
-        const sq = `${f}${r}`;
-        const p = grid[sq] || '';
-        const dark = (f + r) % 2 === 0;
-        let bg = dark ? '#4b5a6b' : '#d7dee6';
-        if (isMyTurn() && lastBestMove && lastBestMove.length >= 4) {
-          const from = squareCode(lastBestMove.slice(0, 2));
-          const to = squareCode(lastBestMove.slice(2, 4));
-          if (sq === from) { bg = 'rgba(235,87,87,.6)'; }
-          if (sq === to) { bg = 'rgba(72,193,249,.55)'; }
-        }
-        html += `<div style="display:flex;align-items:center;justify-content:center;background:${bg};font-size:${Math.max(14, Math.min(44, Math.round(Math.min(88, 620) / 8 * 0.66)))}px;line-height:1">${p ? `<img src="${pieceImg(p)}" alt="${p}" style="width:82%;height:82%;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none">` : ''}</div>`;
-      }
-    }
-    el.innerHTML = html;
-    const bestEl = overlayRoot.querySelector('#cc-ov-best');
-    if (bestEl) {
-      if (lastBestMove) {
-        const b = getBoard();
-        bestEl.textContent = (b && sanFor(b, lastBestMove)) || lastBestMove;
-      } else bestEl.textContent = '--';
-    }
-    const evEl = overlayRoot.querySelector('#cc-ov-eval');
-    if (evEl) evEl.textContent = lastScore ? formatScore(lastScore) : '--';
-    const dEl = overlayRoot.querySelector('#cc-ov-depth');
-    if (dEl) dEl.textContent = lastDepth ? `d${lastDepth}` : '--';
-  }
-
   function createGui() {
     if (document.getElementById('cc-mini-gui')) return;
     const root = document.createElement('div');
@@ -665,7 +554,6 @@
       <div id="cc-flash-row" style="display:flex;gap:8px;align-items:center;flex:0 0 auto;font-size:.84em;opacity:.9;flex-wrap:wrap">
         <button id="cc-flashkey" title="Click to set flash key" style="all:unset;cursor:pointer;flex:0 0 auto;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)">Flash: <span id="cc-flashkey-label"></span></button>
         <button id="cc-best" title="Reset to best move" style="all:unset;cursor:pointer;flex:0 0 auto;padding:3px 8px;border-radius:7px;background:rgba(47,125,246,.14);border:1px solid rgba(47,125,246,.3)">Best</button>
-        <button id="cc-overlay-btn" title="Toggle overlay (O)" style="all:unset;cursor:pointer;flex:0 0 auto;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)">Overlay</button>
         <label style="display:flex;gap:6px;align-items:center;opacity:.9;cursor:pointer"><input id="cc-hide" type="checkbox" ${hideUntilKey ? 'checked' : ''} style="accent-color:#4a90ff">Hide until key</label>
       </div>
       <label id="cc-hide-gui-wrap" style="display:${hideUntilKey ? 'flex' : 'none'};gap:6px;align-items:center;flex:0 0 auto;font-size:.8em;opacity:.82;cursor:pointer;padding-left:6px"><input id="cc-hide-gui" type="checkbox" ${flashWhenGuiHidden ? 'checked' : ''} style="accent-color:#4a90ff">Work when GUI hidden (G)</label>
@@ -706,8 +594,6 @@
       updateStatusDisplay();
     });
     const bestBtn = root.querySelector('#cc-best');
-    const overlayBtn = root.querySelector('#cc-overlay-btn');
-    if (overlayBtn) overlayBtn.addEventListener('click', () => setOverlayVisible(!overlayRoot || overlayRoot.style.display === 'none'));
     if (bestBtn) bestBtn.addEventListener('click', () => {
       if (!running) return;
       const board = getBoard();
@@ -851,7 +737,6 @@
     }
     if (isTypingTarget(e.target)) return;
     if (e.key === 'g' || e.key === 'G') { toggleHints(); return; }
-    if (e.key === 'o' || e.key === 'O') { e.preventDefault(); setOverlayVisible(!overlayRoot || overlayRoot.style.display === 'none'); return; }
     if (e.key === flashKey) { e.preventDefault(); flashMove(); }
   }, true);
 
