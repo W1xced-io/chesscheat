@@ -488,7 +488,7 @@
         <span>Chesscheat</span><span style="font-weight:500;font-size:.9em;opacity:.85">G: <span id="cc-toggle">ON</span></span>
       </div>
       <div id="cc-controls" style="display:flex;gap:8px;align-items:stretch;flex:1 1 auto;min-height:0">
-        <button id="cc-start" style="all:unset;cursor:pointer;flex:1 1 0;background:linear-gradient(180deg,#3b82f6,#2b6ef0);padding:8px 10px;border-radius:9px;font-size:.95em;font-weight:600;letter-spacing:.2px;box-shadow:0 3px 10px rgba(43,110,240,.22), inset 0 1px 0 rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;text-align:center;transition:filter .12s ease, transform .06s ease">Start</button>
+        <button id="cc-start" style="all:unset;cursor:pointer;flex:1 1 0;background:#2f7df6;padding:8px 10px;border-radius:9px;font-size:.95em;font-weight:600;letter-spacing:.2px;box-shadow:none;display:flex;align-items:center;justify-content:center;text-align:center;transition:filter .12s ease, transform .06s ease">Start</button>
         <label style="font-size:.9em;opacity:.92;display:flex;gap:6px;align-items:center;justify-content:center;flex:0 0 auto;padding:0 8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:9px">Depth<input id="cc-depth" type="number" min="1" max="30" value="${globalDepth}" style="width:3.5em;background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:6px;padding:4px 6px;font-size:1em;outline:none"></label>
       </div>
       <div id="cc-flash-row" style="display:flex;gap:8px;align-items:center;flex:0 0 auto;font-size:.85em">
@@ -554,16 +554,16 @@
         await start();
         if (running) {
           startBtn.textContent = 'Stop';
-          startBtn.style.background = 'linear-gradient(180deg,#4a505e,#3a3f4b)';
-          startBtn.style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,.06)';
+          startBtn.style.background = '#3a3f4b';
+          startBtn.style.boxShadow = 'none';
         } else {
           startBtn.textContent = 'Start';
         }
       } else {
         stop();
         startBtn.textContent = 'Start';
-        startBtn.style.background = 'linear-gradient(180deg,#3b82f6,#2b6ef0)';
-        startBtn.style.boxShadow = '0 3px 10px rgba(43,110,240,.22), inset 0 1px 0 rgba(255,255,255,.12)';
+        startBtn.style.background = '#2f7df6';
+        startBtn.style.boxShadow = 'none';
       }
     });
 
