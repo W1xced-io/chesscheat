@@ -15,8 +15,21 @@
   <li><b>Bundled engine:</b> ships Stockfish 19 lite (single-threaded WASM) in <code>engine/</code>, loaded via a bridge/blob worker with fallback to chess.com's engine - no dependency on site engine path/hash changes.</li>
   <li><b>Correct side to move:</b> detects which color you play to avoid showing the opponent's best move as yours.</li>
   <li><b>Richer GUI/status:</b> draggable, resizable glassy panel with scalable controls; shows search depth, evaluation (cp/mate), and best move in SAN.</li>
+  <li><b>MultiPV analysis:</b> analyze up to 5 lines at once (<b>MultiPV 1-5</b>) and cycle through them with <b>&#9664;</b> / <b>&#9654;</b>.</li>
+  <li><b>One-click best move:</b> the <b>Best</b> button instantly restarts analysis from the current position and jumps to the top move.</li>
   <li><b>Flash & stealth controls:</b> configurable flash key (default <code>`</code>) to briefly reveal the move, <b>Hide until key</b> mode, and an option to allow flashing while the GUI is hidden with <code>G</code>.</li>
-  <li><b>Persistence & cleanup:</b> depth/flash/hide settings saved in <code>localStorage</code>; unused legacy files removed and manifest/architecture cleaned up (main-world script + bridge for bundled engine access).</li>
+  <li><b>Persistence & cleanup:</b> depth/MultiPV/flash/hide settings saved in <code>localStorage</code>; unused legacy files removed and manifest/architecture cleaned up (main-world script + bridge for bundled engine access).</li>
+  <li><b>Separate desktop overlay:</b> an always-on-top Electron window (in <code>desktop/</code>) shows the board, pieces, best move and evaluation independently of the browser. It auto-flips to your color, supports manual flip, and renders real piece images.</li>
+</ul>
+
+<h1>Desktop overlay (Electron)</h1>
+<p>A standalone always-on-top window that mirrors the board and analysis outside the browser.</p>
+<ul>
+  <li><b>Setup:</b> <code>cd desktop &amp;&amp; npm install &amp;&amp; npm start</code></li>
+  <li><b>Auto-flip:</b> the board orients to your playing color (black at the bottom when you play black); the <b>Flip</b> button overrides it.</li>
+  <li><b>Piece images:</b> renders real chess piece SVGs (lichess cburnett set).</li>
+  <li><b>Data flow:</b> the extension posts live state to a local bridge on <code>http://127.0.0.1:43117/state</code>.</li>
+  <li><b>Stealth:</b> the move highlight only appears on your turn.</li>
 </ul>
 
 <h1>Usage</h1>
@@ -25,6 +38,8 @@
   <li>Click <b>Start</b> to run analysis, <b>Stop</b> to stop.</li>
   <li>Press <b>G</b> to toggle the GUI and hints/highlights on/off. While typing in inputs, <b>G</b> won't toggle.</li>
   <li>Adjust <b>Depth</b> in the panel (saved automatically).</li>
+  <li><b>MultiPV:</b> pick how many lines to analyze (1-5); use <b>&#9664;</b> / <b>&#9654;</b> to cycle and show each line's move.</li>
+  <li><b>Best:</b> click to restart analysis on the current position and reset to the top move.</li>
   <li><b>Flash:</b> click <b>Flash</b> to set a key, press it to show the move briefly (~700 ms). Enable <b>Hide until key</b> to keep hints hidden until flashed; optionally enable flashing while the GUI is hidden with <code>G</code>.</li>
   <li>Drag the panel by its header and resize from the bottom-right corner.</li>
 </ul>
