@@ -571,7 +571,14 @@
     });
     const bestBtn = root.querySelector('#cc-best');
     if (bestBtn) bestBtn.addEventListener('click', () => {
-      if (running && lastPosKey) requestBestMove(lastPosKey, lastPosKey);
+      if (!running) return;
+      const board = getBoard();
+      if (!board) return;
+      const pos = readPosition(board);
+      if (!pos || !pos.fen) return;
+      lastPosInfo = pos;
+      lastPosKey = '';
+      checkPosition();
     });
     if (mpNext) mpNext.addEventListener('click', () => {
       if (multiPv <= 1) return;
