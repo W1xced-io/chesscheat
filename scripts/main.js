@@ -502,6 +502,10 @@
       </div>
     `;
 
+    const ghost = document.createElement('div');
+    ghost.id = 'cc-ghost';
+    ghost.style.cssText = 'position:fixed;z-index:2147483646;pointer-events:none;box-sizing:border-box;background:linear-gradient(160deg,rgba(26,28,34,.5),rgba(14,16,21,.42));border:1px solid rgba(255,255,255,.1);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);opacity:0;transition:opacity .18s ease;';
+    document.documentElement.appendChild(ghost);
     document.documentElement.appendChild(root);
 
     const startBtn = root.querySelector('#cc-start');
@@ -575,21 +579,36 @@
     });
 
     let dragging = false, offX = 0, offY = 0;
+    const syncGhost = () => {
+      const r = root.getBoundingClientRect();
+      ghost.style.left = `${r.left}px`;
+      ghost.style.top = `${r.top}px`;
+      ghost.style.width = `${r.width}px`;
+      ghost.style.height = `${r.height}px`;
+    };
     drag.addEventListener('mousedown', (e) => {
       if (e.target && e.target.closest && e.target.closest('#cc-resize')) return;
       dragging = true;
       const rect = root.getBoundingClientRect();
       offX = e.clientX - rect.left; offY = e.clientY - rect.top;
       root.style.right = 'auto';
+      ghost.style.opacity = '1';
+      syncGhost();
       e.preventDefault();
     });
     window.addEventListener('mousemove', (e) => {
-      if (dragging) {
-        root.style.left = `${Math.max(0, e.clientX - offX)}px`;
-        root.style.top = `${Math.max(0, e.clientY - offY)}px`;
-      }
+      if (!dragging) return;
+      ghost.style.opacity = '0.45';
+      syncGhost();
+      root.style.left = `${Math.max(0, e.clientX - offX)}px`;
+      root.style.top = `${Math.max(0, e.clientY - offY)}px`;
+      clearTimeout(root._ghostT);
+      root._ghostT = setTimeout(() => { ghost.style.opacity = '0'; }, 120);
     });
-    window.addEventListener('mouseup', () => { dragging = false; });
+    window.addEventListener('mouseup', () => {
+      if (dragging) { ghost.style.opacity = '0'; }
+      dragging = false;
+    });
 
     const resizeHandle = root.querySelector('#cc-resize');
     let resizing = false, startX = 0, startY = 0, startW = 0, startH = 0;
