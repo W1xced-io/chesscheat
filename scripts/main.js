@@ -205,7 +205,8 @@
       const grid = board ? readGrid(board) : {};
       const fenPlacement = placementFromGrid(grid);
       const score = lastScore ? (lastScore.type === 'mate' ? { type: 'mate', value: lastScore.value } : { type: 'cp', value: lastScore.value }) : null;
-      const payload = JSON.stringify({ fen: fenPlacement, grid, best: lastBestMove || '', score, depth: lastDepth || 0, status: !running ? 'stopped' : (!lastBestMove ? 'thinking' : 'best: ' + lastBestMove) });
+      const mine = isMyTurn();
+      const payload = JSON.stringify({ fen: fenPlacement, grid, best: (mine ? (lastBestMove || '') : ''), score, depth: lastDepth || 0, status: !running ? 'stopped' : (!lastBestMove ? 'thinking' : (mine ? 'best: ' + lastBestMove : 'opp turn')), turn: lastPosInfo ? lastPosInfo.turn : '', playingAs: lastPosInfo ? lastPosInfo.playingAs : '', mine });
       fetch('http://127.0.0.1:43117/state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, mode: 'cors' }).catch(() => {});
     } catch (e) {}
   }
@@ -216,12 +217,17 @@
       const pos = board ? readPosition(board) : null;
       const grid = board ? readGrid(board) : {};
       const score = lastScore ? (lastScore.type === 'mate' ? { type: 'mate', value: lastScore.value } : { type: 'cp', value: lastScore.value }) : null;
+      const mine = isMyTurn();
       localStorage.setItem('cc-ov-state', JSON.stringify({
         grid,
-        best: lastBestMove || '',
+        fen: fenPlacement,
+        best: (mine ? (lastBestMove || '') : ''),
         score,
         depth: lastDepth || 0,
-        status: !running ? 'stopped' : (!lastBestMove ? 'thinking' : 'best: ' + lastBestMove)
+        status: !running ? 'stopped' : (!lastBestMove ? 'thinking' : (mine ? 'best: ' + lastBestMove : 'opp turn')),
+        turn: lastPosInfo ? lastPosInfo.turn : '',
+        playingAs: lastPosInfo ? lastPosInfo.playingAs : '',
+        mine
       }));
       sendDesktopState();
     } catch (e) {}
@@ -595,7 +601,7 @@
         const p = grid[sq] || '';
         const dark = (f + r) % 2 === 0;
         let bg = dark ? '#4b5a6b' : '#d7dee6';
-        if (lastBestMove && lastBestMove.length >= 4) {
+        if (isMyTurn() && lastBestMove && lastBestMove.length >= 4) {
           const from = squareCode(lastBestMove.slice(0, 2));
           const to = squareCode(lastBestMove.slice(2, 4));
           if (sq === from) { bg = 'rgba(235,87,87,.6)'; }
