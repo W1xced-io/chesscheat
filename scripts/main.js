@@ -65,6 +65,8 @@
   let flashTimer = null;
   let flashVisible = false;
   let capturingKey = false;
+  let overlayRoot = null;
+  let overlayFlipped = false;
 
   function getBoard() {
     return document.querySelector('wc-chess-board');
@@ -198,6 +200,7 @@
   }
 
   function renderHighlights(bestMove) {
+    renderOverlayBoard();
     clearHighlights();
     if (!canShowHints() || !bestMove || bestMove.length < 4) return;
     if (hideUntilKey && !flashVisible) return;
@@ -401,6 +404,7 @@
     const pos = readPosition(board);
     if (!pos || !pos.fen) return;
     lastPosInfo = pos;
+    renderOverlayBoard();
     if (pos.gameOver) { setStatus('game over'); return; }
     const key = pos.fen;
     if (key !== lastPosKey) {
@@ -491,6 +495,87 @@
       if (hideUntilKey) clearHighlights();
       updateStatusDisplay();
     }, 700);
+  }
+
+  function createOverlay() {
+    if (overlayRoot) { overlayRoot.style.display = 'flex'; return; }
+    overlayRoot = document.createElement('div');
+    overlayRoot.id = 'cc-overlay';
+    overlayRoot.style.cssText = [
+      'position:fixed','top:16px','left:16px','z-index:2147483645',
+      'background:linear-gradient(160deg,rgba(24,26,32,.6),rgba(12,14,18,.54))',
+      'color:#eef2f8','font:12px/1.3 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif',
+      'border:1px solid rgba(255,255,255,.12)','border-radius:14px','padding:10px',
+      'box-shadow:0 8px 24px rgba(0,0,0,.24), 0 1px 0 rgba(255,255,255,.05) inset',
+      'backdrop-filter:blur(20px) saturate(150%)','-webkit-backdrop-filter:blur(20px) saturate(150%)',
+      'user-select:none','box-sizing:border-box','display:flex','flex-direction:column','gap:8px'
+    ].join(';');
+    overlayRoot.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span style="font-weight:600;letter-spacing:.2px">Chesscheat Overlay</span>
+        <div style="display:flex;gap:6px">
+          <button id="cc-ov-flip" title="Flip board" style="all:unset;cursor:pointer;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:11px">Flip</button>
+          <button id="cc-ov-close" title="Close overlay" style="all:unset;cursor:pointer;padding:3px 8px;border-radius:7px;background:rgba(235,87,87,.16);border:1px solid rgba(235,87,87,.3);font-size:11px">✕</button>
+        </div>
+      </div>
+      <div id="cc-ov-board" style="display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:min(46vh,360px);height:min(46vh,360px);border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.1)"></div>
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:.9em;opacity:.92">
+        <span id="cc-ov-best">--</span><span id="cc-ov-eval">--</span><span id="cc-ov-depth">--</span>
+      </div>
+    `;
+    document.documentElement.appendChild(overlayRoot);
+    overlayFlipped = false;
+    renderOverlayBoard();
+    overlayRoot.querySelector('#cc-ov-close').addEventListener('click', () => { overlayRoot.style.display = 'none'; });
+    overlayRoot.querySelector('#cc-ov-flip').addEventListener('click', () => { overlayFlipped = !overlayFlipped; renderOverlayBoard(); });
+  }
+
+  function pieceCharToText(p) {
+    const map = { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙', k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
+    return map[p] || '';
+  }
+
+  function renderOverlayBoard() {
+    if (!overlayRoot) return;
+    const el = overlayRoot.querySelector('#cc-ov-board');
+    if (!el) return;
+    const board = getBoard();
+    let grid = {};
+    if (board) {
+      try { const pos = readPosition(board); if (pos && pos.source === 'dom') {} } catch (e) {}
+      try { grid = readGrid(board); } catch (e) {}
+    }
+    const files = overlayFlipped ? [8,7,6,5,4,3,2,1] : [1,2,3,4,5,6,7,8];
+    const ranks = overlayFlipped ? [1,2,3,4,5,6,7,8] : [8,7,6,5,4,3,2,1];
+    let html = '';
+    for (const r of ranks) {
+      for (const f of files) {
+        const sq = `${f}${r}`;
+        const p = grid[sq] || '';
+        const dark = (f + r) % 2 === 0;
+        let bg = dark ? '#4b5a6b' : '#d7dee6';
+        let highlight = '';
+        if (lastBestMove && lastBestMove.length >= 4) {
+          const from = squareCode(lastBestMove.slice(0, 2));
+          const to = squareCode(lastBestMove.slice(2, 4));
+          if (sq === from) { bg = 'rgba(235,87,87,.55)'; }
+          if (sq === to) { bg = 'rgba(72,193,249,.5)'; }
+        }
+        html += `<div style="display:flex;align-items:center;justify-content:center;background:${bg};color:${p ? (p === p.toUpperCase() ? '#fff' : '#111') : 'transparent'};font-size:${Math.max(10, Math.min(22, Math.round(Math.min(46, 360) / 8 * 0.7)))}px;line-height:1">${pieceCharToText(p)}</div>`;
+      }
+    }
+    el.innerHTML = html;
+    const bestEl = overlayRoot.querySelector('#cc-ov-best');
+    if (bestEl) {
+      if (lastBestMove) {
+        const b = getBoard();
+        bestEl.textContent = (b && sanFor(b, lastBestMove)) || lastBestMove;
+      } else bestEl.textContent = '--';
+    }
+    const evEl = overlayRoot.querySelector('#cc-ov-eval');
+    if (evEl) evEl.textContent = lastScore ? formatScore(lastScore) : '--';
+    const dEl = overlayRoot.querySelector('#cc-ov-depth');
+    if (dEl) dEl.textContent = lastDepth ? `d${lastDepth}` : '--';
   }
 
   function createGui() {
@@ -716,7 +801,7 @@
     if (e.key === flashKey) { e.preventDefault(); flashMove(); }
   }, true);
 
-  function init() { createGui(); }
+  function init() { createGui(); createOverlay(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
