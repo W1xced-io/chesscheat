@@ -33,10 +33,25 @@
 const FILES='abcdefgh';
 const squareCode=(sq)=>`${FILES.indexOf(sq[0])+1}${sq[1]}`;
 const pieceChar=(p)=>({K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙',k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'}[p]||'');
-let flipped=false, state={grid:{},best:'',score:null,depth:0,status:'idle'};
+let flipped=false, state={fen:'',grid:{},best:'',score:null,depth:0,status:'idle'};
+function gridFromFen(fen){
+  const grid={};
+  if(!fen) return grid;
+  const rows=String(fen).trim().split(/\s+/)[0].split('/');
+  for(let r=0;r<8 && r<rows.length;r++){
+    let c=0;
+    for(const ch of rows[r]){
+      if(ch>='1'&&ch<='8'){ c+=parseInt(ch,10); }
+      else { if(c<8){ const file=c+1, rank=8-r; grid[`${file}${rank}`]=ch; c++; } }
+    }
+  }
+  return grid;
+}
 function fmtScore(s){ if(!s) return '--'; if(s.type==='mate') return 'M'+s.value; const v=s.value/100; return (v>=0?'+':'')+v.toFixed(2); }
 function render(){
   const el=document.getElementById('board');
+  if(state.fen && Object.keys(state.grid||{}).length===0) state.grid=gridFromFen(state.fen);
+  if(state.fen) state.grid=gridFromFen(state.fen);
   const files=flipped?[8,7,6,5,4,3,2,1]:[1,2,3,4,5,6,7,8];
   const ranks=flipped?[1,2,3,4,5,6,7,8]:[8,7,6,5,4,3,2,1];
   let html='';
@@ -58,7 +73,7 @@ function render(){
 document.getElementById('flip').addEventListener('click',()=>{ flipped=!flipped; render(); });
 document.getElementById('hide').addEventListener('click',()=>{ window.close(); });
 document.getElementById('pin').addEventListener('click',()=>{ /* always-on-top already */ });
-window.cc.onState((data)=>{ state=Object.assign(state,data); render(); });
+window.cc.onState((data)=>{ state=Object.assign(state,data); if(data.grid) state.grid=data.grid; render(); });
 render();
 </script>
 </body>

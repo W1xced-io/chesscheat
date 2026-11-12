@@ -132,7 +132,7 @@
   }
 
   function lastMoverFromHighlights(board, grid) {
-    const highlights = board.querySelectorAll('.highlight:not(.cheat-highlight)');
+    const highlights = board.querySelectorAll('.highlight');
     for (const el of highlights) {
       const cls = Array.from(el.classList).find((c) => /^square-[1-8][1-8]$/.test(c));
       const piece = cls && grid[cls.slice(7)];
@@ -203,8 +203,9 @@
     try {
       const board = getBoard();
       const grid = board ? readGrid(board) : {};
+      const fenPlacement = placementFromGrid(grid);
       const score = lastScore ? (lastScore.type === 'mate' ? { type: 'mate', value: lastScore.value } : { type: 'cp', value: lastScore.value }) : null;
-      const payload = JSON.stringify({ grid, best: lastBestMove || '', score, depth: lastDepth || 0, status: !running ? 'stopped' : (!lastBestMove ? 'thinking' : 'best: ' + lastBestMove) });
+      const payload = JSON.stringify({ fen: fenPlacement, grid, best: lastBestMove || '', score, depth: lastDepth || 0, status: !running ? 'stopped' : (!lastBestMove ? 'thinking' : 'best: ' + lastBestMove) });
       fetch('http://127.0.0.1:43117/state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, mode: 'cors' }).catch(() => {});
     } catch (e) {}
   }
