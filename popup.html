@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Chesscheat</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; width:320px; font:13px/1.35 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif; background:linear-gradient(160deg,rgba(24,26,32,.96),rgba(12,14,18,.96)); color:#eef2f8; }
+  .wrap { padding:12px; display:flex; flex-direction:column; gap:10px; }
+  .head { display:flex; justify-content:space-between; align-items:center; font-weight:700; letter-spacing:.2px; }
+  .board { display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(8,1fr); width:280px; height:280px; border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,.12); }
+  .meta { display:flex; justify-content:space-between; gap:8px; font-size:.95em; opacity:.95; }
+  button { all:unset; cursor:pointer; padding:5px 10px; border-radius:8px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); font-size:12px; }
+  .accent { background:rgba(47,125,246,.18); border-color:rgba(47,125,246,.35); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head"><span>Chesscheat</span><span id="status" style="font-weight:500;opacity:.8;font-size:.9em">idle</span></div>
+  <div id="board" class="board"></div>
+  <div class="meta"><span id="best">--</span><span id="eval">--</span><span id="depth">--</span></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end">
+    <button id="flip">Flip</button>
+    <button id="open" class="accent">Open chess.com</button>
+  </div>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>

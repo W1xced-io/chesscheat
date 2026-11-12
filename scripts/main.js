@@ -199,7 +199,24 @@
     return lastPosInfo.turn === lastPosInfo.playingAs;
   }
 
+  function publishOverlayState() {
+    try {
+      const board = getBoard();
+      const pos = board ? readPosition(board) : null;
+      const grid = board ? readGrid(board) : {};
+      const score = lastScore ? (lastScore.type === 'mate' ? { type: 'mate', value: lastScore.value } : { type: 'cp', value: lastScore.value }) : null;
+      localStorage.setItem('cc-ov-state', JSON.stringify({
+        grid,
+        best: lastBestMove || '',
+        score,
+        depth: lastDepth || 0,
+        status: !running ? 'stopped' : (!lastBestMove ? 'thinking' : 'best: ' + lastBestMove)
+      }));
+    } catch (e) {}
+  }
+
   function renderHighlights(bestMove) {
+    publishOverlayState();
     renderOverlayBoard();
     clearHighlights();
     if (!canShowHints() || !bestMove || bestMove.length < 4) return;
@@ -404,6 +421,7 @@
     const pos = readPosition(board);
     if (!pos || !pos.fen) return;
     lastPosInfo = pos;
+    publishOverlayState();
     renderOverlayBoard();
     if (pos.gameOver) { setStatus('game over'); return; }
     const key = pos.fen;
@@ -463,6 +481,7 @@
     if (flashTimer) { clearTimeout(flashTimer); flashTimer = null; }
     flashVisible = false;
     clearHighlights();
+    publishOverlayState();
     setStatus('stopped');
   }
 
